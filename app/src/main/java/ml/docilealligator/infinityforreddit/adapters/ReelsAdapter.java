@@ -1,6 +1,5 @@
 package ml.docilealligator.infinityforreddit.adapters;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.view.GestureDetector;
@@ -13,15 +12,17 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.core.content.ContextCompat;
-import ml.docilealligator.infinityforreddit.utils.APIUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +42,11 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         void onSave(Post post);
         void onShare(Post post);
     }
+
+    private static final int COLOR_UPVOTED = 0xFFFF8B60;
+    private static final int COLOR_DOWNVOTED = 0xFF9494FF;
+    private static final int COLOR_SAVED = 0xFFFFEB3B;
+    private static final int COLOR_DEFAULT = 0xFFFFFFFF;
 
     private final Context context;
     private final InteractionListener listener;
@@ -76,7 +82,6 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             }
         }
         players.clear();
-        notifyDataSetChanged();
     }
 
     public void clear() {
@@ -100,15 +105,24 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.subredditText.setText("r/" + post.getSubredditName());
         holder.scoreText.setText(String.valueOf(post.getScore()));
         
-        ((android.widget.ImageView) holder.upvoteButton).setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? android.graphics.Color.parseColor("#FF8B60") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        ((android.widget.ImageView) holder.downvoteButton).setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? android.graphics.Color.parseColor("#9494FF") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        ((android.widget.ImageView) holder.saveButton).setColorFilter(post.isSaved() ? android.graphics.Color.parseColor("#FFEB3B") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        // Update button tints based on current state
+        updateVoteUI(holder, post);
+        updateSaveUI(holder, post);
 
+        // Attach the player if it exists for this position
+        ExoPlayer existingPlayer = players.get(position);
+        holder.playerView.setPlayer(existingPlayer);
+    }
 
-        // We will manage playback separately when the page is selected
-        holder.playerView.setPlayer(null);
-        
-        holder.setupGestures();
+    private void updateVoteUI(ReelViewHolder holder, Post post) {
+        int voteType = post.getVoteType();
+        holder.upvoteButton.setColorFilter(voteType == 1 ? COLOR_UPVOTED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.downvoteButton.setColorFilter(voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.scoreText.setTextColor(voteType == 1 ? COLOR_UPVOTED : (voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT));
+    }
+
+    private void updateSaveUI(ReelViewHolder holder, Post post) {
+        holder.saveButton.setColorFilter(post.isSaved() ? COLOR_SAVED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
     }
 
     @Override
@@ -122,9 +136,11 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         return posts.size();
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     public void playVideoAt(int position) {
         currentPlayingPosition = position;
 
+        // Release players outside the [-1, +1] window
         List<Integer> toRemove = new ArrayList<>();
         for (Integer pos : players.keySet()) {
             if (pos < position - 1 || pos > position + 1) {
@@ -139,6 +155,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             }
         }
 
+        // Create or update players for [position-1, position, position+1]
         for (int i = position - 1; i <= position + 1; i++) {
             if (i >= 0 && i < posts.size()) {
                 if (!players.containsKey(i)) {
@@ -147,13 +164,22 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     if (url == null || url.isEmpty()) {
                         url = post.getUrl();
                     }
+                    if (url == null || url.isEmpty()) continue;
 
                     ExoPlayer player = new ExoPlayer.Builder(context).build();
                     player.setRepeatMode(Player.REPEAT_MODE_ALL);
 
                     DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
-                    ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(MediaItem.fromUri(Uri.parse(url)));
+                    
+                    // Use HLS for Reddit videos (*.m3u8), Progressive for direct mp4/gif
+                    MediaSource mediaSource;
+                    if (url.contains(".m3u8") || url.contains("v.redd.it")) {
+                        mediaSource = new HlsMediaSource.Factory(dataSourceFactory)
+                                .createMediaSource(MediaItem.fromUri(Uri.parse(url)));
+                    } else {
+                        mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                                .createMediaSource(MediaItem.fromUri(Uri.parse(url)));
+                    }
 
                     player.setMediaSource(mediaSource);
                     player.prepare();
@@ -176,11 +202,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         TextView subredditText;
         TextView scoreText;
         ImageView likeAnimation;
-        View upvoteButton;
-        View downvoteButton;
-        View commentsButton;
-        View saveButton;
-        View shareButton;
+        ImageView upvoteButton;
+        ImageView downvoteButton;
+        ImageView commentsButton;
+        ImageView saveButton;
+        ImageView shareButton;
+
+        private GestureDetector gestureDetector;
 
         public ReelViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -195,78 +223,87 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             commentsButton = itemView.findViewById(R.id.comments_button);
             saveButton = itemView.findViewById(R.id.save_button);
             shareButton = itemView.findViewById(R.id.share_button);
-        }
 
-        public void setupGestures() {
-            ExoPlayer player = players.get(getAdapterPosition());
-            playerView.setPlayer(player);
-
+            // Set up click listeners ONCE in the constructor, not in onBind
             upvoteButton.setOnClickListener(v -> {
-                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    Post post = posts.get(getAdapterPosition());
-                    if (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE)) {
-                        post.setVoteType(0);
-                        post.setScore(post.getScore() - 1);
-                    } else {
-                        post.setScore(post.getScore() + (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? 2 : 1));
-                        post.setVoteType(1);
-                    }
-                    notifyItemChanged(getAdapterPosition());
-                    listener.onUpvote(post, getAdapterPosition());
+                int pos = getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return;
+                Post post = posts.get(pos);
+                if (post.getVoteType() == 1) {
+                    // Already upvoted, remove vote
+                    post.setVoteType(0);
+                    post.setScore(post.getScore() - 1);
+                } else {
+                    // Apply upvote (undo downvote if active)
+                    post.setScore(post.getScore() + (post.getVoteType() == -1 ? 2 : 1));
+                    post.setVoteType(1);
                 }
+                updateVoteUI(this, post);
+                listener.onUpvote(post, pos);
             });
+
             downvoteButton.setOnClickListener(v -> {
-                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    Post post = posts.get(getAdapterPosition());
-                    if (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE)) {
-                        post.setVoteType(0);
-                        post.setScore(post.getScore() + 1);
-                    } else {
-                        post.setScore(post.getScore() - (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? 2 : 1));
-                        post.setVoteType(-1);
-                    }
-                    notifyItemChanged(getAdapterPosition());
-                    listener.onDownvote(post, getAdapterPosition());
+                int pos = getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return;
+                Post post = posts.get(pos);
+                if (post.getVoteType() == -1) {
+                    // Already downvoted, remove vote
+                    post.setVoteType(0);
+                    post.setScore(post.getScore() + 1);
+                } else {
+                    // Apply downvote (undo upvote if active)
+                    post.setScore(post.getScore() - (post.getVoteType() == 1 ? 2 : 1));
+                    post.setVoteType(-1);
                 }
+                updateVoteUI(this, post);
+                listener.onDownvote(post, pos);
             });
+
             commentsButton.setOnClickListener(v -> {
-                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onComments(posts.get(getAdapterPosition()));
-                }
-            });
-            saveButton.setOnClickListener(v -> {
-                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    Post post = posts.get(getAdapterPosition());
-                    post.setSaved(!post.isSaved());
-                    notifyItemChanged(getAdapterPosition());
-                    listener.onSave(post);
-                }
-            });
-            shareButton.setOnClickListener(v -> {
-                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onShare(posts.get(getAdapterPosition()));
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos < posts.size()) {
+                    listener.onComments(posts.get(pos));
                 }
             });
 
-            GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            saveButton.setOnClickListener(v -> {
+                int pos = getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return;
+                Post post = posts.get(pos);
+                post.setSaved(!post.isSaved());
+                updateSaveUI(this, post);
+                listener.onSave(post);
+            });
+
+            shareButton.setOnClickListener(v -> {
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos < posts.size()) {
+                    listener.onShare(posts.get(pos));
+                }
+            });
+
+            // Double-tap to like gesture on the player view
+            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
+                    int pos = getBindingAdapterPosition();
+                    if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return true;
+                    Post post = posts.get(pos);
                     showLikeAnimation();
-                    if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                        Post post = posts.get(getAdapterPosition());
-                        if (!String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE)) {
-                            post.setScore(post.getScore() + (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? 2 : 1));
-                            post.setVoteType(1);
-                            notifyItemChanged(getAdapterPosition());
-                            listener.onUpvote(post, getAdapterPosition());
-                        }
+                    if (post.getVoteType() != 1) {
+                        post.setScore(post.getScore() + (post.getVoteType() == -1 ? 2 : 1));
+                        post.setVoteType(1);
+                        updateVoteUI(ReelViewHolder.this, post);
+                        listener.onUpvote(post, pos);
                     }
                     return true;
                 }
 
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
-                    if (player != null && getAdapterPosition() == currentPlayingPosition) {
+                    int pos = getBindingAdapterPosition();
+                    ExoPlayer player = players.get(pos);
+                    if (player != null && pos == currentPlayingPosition) {
                         if (player.isPlaying()) {
                             player.pause();
                         } else {
@@ -277,7 +314,10 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 }
             });
 
-            playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+            playerView.setOnTouchListener((v, event) -> {
+                gestureDetector.onTouchEvent(event);
+                return true; // consume touch to prevent PlayerView default behavior
+            });
         }
 
         private void showLikeAnimation() {

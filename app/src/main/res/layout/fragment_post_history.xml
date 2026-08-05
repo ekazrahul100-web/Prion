@@ -290,6 +290,61 @@
 
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/dividerColor" />
+
+        <LinearLayout
+            android:id="@+id/custom_refresh_hide_seen_linear_layout_post_history_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:paddingStart="72dp"
+            android:paddingEnd="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="16dp"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/custom_refresh_hide_seen_text_view_post_history_fragment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hide Seen Posts on Refresh"
+                    android:textColor="?attr/primaryTextColor"
+                    android:textSize="?attr/font_16"
+                    android:fontFamily="?attr/font_family" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Posts you interact with or scroll past will be hidden when you refresh. Disable to restore all posts."
+                    android:textColor="?attr/secondaryTextColor"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="?attr/font_family" />
+
+            </LinearLayout>
+
+            <ml.docilealligator.infinityforreddit.customviews.ThemedMaterialSwitch
+                android:id="@+id/custom_refresh_hide_seen_switch_post_history_fragment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>

@@ -24,6 +24,7 @@ import javax.inject.Named;
 
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.account.Account;
 import ml.docilealligator.infinityforreddit.adapters.ReelsAdapter;
 import ml.docilealligator.infinityforreddit.apis.RedditAPI;
@@ -31,25 +32,26 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.postfilter.PostFilter;
-import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
-import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
-import ml.docilealligator.infinityforreddit.thing.SortType;
-import ml.docilealligator.infinityforreddit.utils.APIUtils;
-import ml.docilealligator.infinityforreddit.thing.SaveThing;
-import ml.docilealligator.infinityforreddit.thing.VoteThing;
 import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
-import androidx.appcompat.widget.SwitchCompat;
-import android.widget.ImageView;
 import ml.docilealligator.infinityforreddit.readpost.ReadPostsList;
 import ml.docilealligator.infinityforreddit.readpost.ReadPostsListInterface;
-
+import ml.docilealligator.infinityforreddit.thing.SaveThing;
+import ml.docilealligator.infinityforreddit.thing.SortType;
+import ml.docilealligator.infinityforreddit.thing.VoteThing;
+import ml.docilealligator.infinityforreddit.utils.APIUtils;
+import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
+import androidx.appcompat.widget.SwitchCompat;
+import android.widget.ImageView;
+
 import retrofit2.Retrofit;
 
 public class ReelsActivity extends BaseActivity {
+
+    private static final String REELS_NAMESPACE = "reels";
+    private static final String PREF_HIDE_SEEN_REELS = "hide_seen_posts_in_reels";
+    private static final int DWELL_TIME_MS = 5000; // 5 seconds
 
     @Inject
     @Named("default")
@@ -137,9 +139,10 @@ public class ReelsActivity extends BaseActivity {
         hideSeenToggle = findViewById(R.id.hide_seen_toggle);
         refreshButton = findViewById(R.id.refresh_button);
         
-        hideSeenToggle.setChecked(mSharedPreferences.getBoolean("hide_read_posts_in_reels", false));
+        // Toggle uses the same key that the filter checks
+        hideSeenToggle.setChecked(mSharedPreferences.getBoolean(PREF_HIDE_SEEN_REELS, false));
         hideSeenToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            mSharedPreferences.edit().putBoolean("hide_read_posts_in_reels", isChecked).apply();
+            mSharedPreferences.edit().putBoolean(PREF_HIDE_SEEN_REELS, isChecked).apply();
         });
         
         refreshButton.setOnClickListener(v -> {
@@ -155,14 +158,14 @@ public class ReelsActivity extends BaseActivity {
             fetchVideos();
         });
 
-        mAccountName = mSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
-        mAccessToken = mSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
+        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
+        mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
 
         ReelsAdapter.InteractionListener listener = new ReelsAdapter.InteractionListener() {
             @Override
             public void onUpvote(Post post, int position) {
                 if (mAccessToken == null) return;
-                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 VoteThing.voteThing(ReelsActivity.this, mOauthRetrofit, mAccessToken, new VoteThing.VoteThingListener() {
                     @Override
                     public void onVoteThingSuccess(int position1) {}
@@ -174,7 +177,7 @@ public class ReelsActivity extends BaseActivity {
             @Override
             public void onDownvote(Post post, int position) {
                 if (mAccessToken == null) return;
-                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 VoteThing.voteThing(ReelsActivity.this, mOauthRetrofit, mAccessToken, new VoteThing.VoteThingListener() {
                     @Override
                     public void onVoteThingSuccess(int position1) {}
@@ -185,7 +188,7 @@ public class ReelsActivity extends BaseActivity {
 
             @Override
             public void onComments(Post post) {
-                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 Intent intent = new Intent(ReelsActivity.this, ViewPostDetailActivity.class);
                 intent.putExtra(ViewPostDetailActivity.EXTRA_POST_DATA, post);
                 startActivity(intent);
@@ -194,7 +197,7 @@ public class ReelsActivity extends BaseActivity {
             @Override
             public void onSave(Post post) {
                 if (mAccessToken == null) return;
-                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 SaveThing.saveThing(mOauthRetrofit, mAccessToken, post.getFullName(), new SaveThing.SaveThingListener() {
                     @Override
                     public void success() {}
@@ -205,7 +208,7 @@ public class ReelsActivity extends BaseActivity {
 
             @Override
             public void onShare(Post post) {
-                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, post.getTitle());
@@ -263,19 +266,22 @@ public class ReelsActivity extends BaseActivity {
                     fetchVideos();
                 }
 
+                // Cancel any previous dwell timer
                 if (dwellRunnable != null) {
                     dwellHandler.removeCallbacks(dwellRunnable);
                 }
                 currentPosition = position;
+                // Always mark after dwell — no toggle gating here.
+                // The toggle gates FILTERING, not MARKING.
                 dwellRunnable = () -> {
                     if (currentPosition == position) {
                         Post p = currentAdapter.getPostAt(position);
-                        if (p != null && mSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SUBREDDITS_BASE, false)) {
-                            SeenPostsManager.markSeen(mSharedPreferences, p.getId());
+                        if (p != null) {
+                            SeenPostsManager.markSeen(mSharedPreferences, p.getId(), REELS_NAMESPACE);
                         }
                     }
                 };
-                dwellHandler.postDelayed(dwellRunnable, 3000);
+                dwellHandler.postDelayed(dwellRunnable, DWELL_TIME_MS);
             }
         });
 
@@ -301,8 +307,6 @@ public class ReelsActivity extends BaseActivity {
         }
     }
 
-    // resetAndFetch is intentionally removed
-
     private void fetchVideos() {
         isLoading = true;
         String subreddit;
@@ -327,6 +331,8 @@ public class ReelsActivity extends BaseActivity {
         RedditAPI api = Account.ANONYMOUS_ACCOUNT.equals(accountName) ? mRetrofit.create(RedditAPI.class) : mOauthRetrofit.create(RedditAPI.class);
         
         final String finalAccountName = accountName;
+        final boolean hideSeenEnabled = mSharedPreferences.getBoolean(PREF_HIDE_SEEN_REELS, false);
+        
         mExecutor.execute(() -> {
             try {
                 retrofit2.Response<String> response;
@@ -347,11 +353,7 @@ public class ReelsActivity extends BaseActivity {
                     filter.containLinkType = false;
                     filter.containGalleryType = false;
                     
-                    
                     ReadPostsListInterface readList = NullReadPostsList.getInstance();
-                    if (mSharedPreferences.getBoolean("hide_read_posts_in_reels", false)) {
-                        readList = new ReadPostsList(mRedditDataRoomDatabase.readPostDao(), finalAccountName, false);
-                    }
                     LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, readList);
                     String newAfter = ParsePost.getLastItem(response.body());
                     if (isNsfwMode) nsfwAfter = newAfter;
@@ -361,9 +363,12 @@ public class ReelsActivity extends BaseActivity {
                     if (posts != null) {
                         for (Post p : posts) {
                             if (p.getPostType() == Post.VIDEO_TYPE || p.getPostType() == Post.GIF_TYPE) {
+                                // Enforce NSFW-only when in NSFW mode
                                 if (isNsfwMode && !p.isNSFW()) continue;
-                                if (mSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SUBREDDITS_BASE, false)) {
-                                    if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId())) continue;
+                                
+                                // Filter out seen posts if toggle is on (uses reels namespace)
+                                if (hideSeenEnabled) {
+                                    if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId(), REELS_NAMESPACE)) continue;
                                 }
                                 
                                 videos.add(p);
@@ -378,7 +383,6 @@ public class ReelsActivity extends BaseActivity {
                         if (videos.isEmpty() && newAfter != null) {
                             fetchVideos(); // Fetch more if none were videos
                         } else if (currentAdapter.getItemCount() == videos.size() && videos.size() > 0) {
-                            // If this was the first batch, play the first video automatically
                             currentAdapter.playVideoAt(0);
                         }
                     });
@@ -390,6 +394,16 @@ public class ReelsActivity extends BaseActivity {
                 new Handler(Looper.getMainLooper()).post(() -> isLoading = false);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dwellRunnable != null) {
+            dwellHandler.removeCallbacks(dwellRunnable);
+        }
+        if (sfwAdapter != null) sfwAdapter.releasePlayers();
+        if (nsfwAdapter != null) nsfwAdapter.releasePlayers();
     }
 
     @Override

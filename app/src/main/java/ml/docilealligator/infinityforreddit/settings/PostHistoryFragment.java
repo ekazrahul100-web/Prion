@@ -158,6 +158,16 @@ public class PostHistoryFragment extends Fragment {
         binding.hideReadPostsAutomaticallyInSearchLinearLayoutPostHistoryFragment.setOnClickListener(view -> binding.hideReadPostsAutomaticallyInSearchSwitchPostHistoryFragment.performClick());
         binding.hideReadPostsAutomaticallyInSearchSwitchPostHistoryFragment.setOnCheckedChangeListener((compoundButton, b) -> postHistorySharedPreferences.edit().putBoolean(mActivity.accountName + SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SEARCH_BASE, b).apply());
 
+        // Custom Refresh System toggle — stored in DEFAULT shared prefs (not post_history)
+        // so PostPagingSource can read it directly
+        SharedPreferences defaultPrefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext());
+        binding.customRefreshHideSeenSwitchPostHistoryFragment.setChecked(
+                defaultPrefs.getBoolean("custom_refresh_hide_seen_posts", true));
+        binding.customRefreshHideSeenLinearLayoutPostHistoryFragment.setOnClickListener(view ->
+                binding.customRefreshHideSeenSwitchPostHistoryFragment.performClick());
+        binding.customRefreshHideSeenSwitchPostHistoryFragment.setOnCheckedChangeListener((compoundButton, b) ->
+                defaultPrefs.edit().putBoolean("custom_refresh_hide_seen_posts", b).apply());
+
         return binding.getRoot();
     }
 
