@@ -2562,7 +2562,7 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                     }
 
                     if (Account.ANONYMOUS_ACCOUNT.equals(mAccountName)) {
-                        ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
+                        ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId()); ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
                                 post.getId(), ReadPostType.ANONYMOUS_UPVOTED_POSTS,
                                 ReadPostsUtils.GetReadPostsLimit(mActivity.accountName, mPostHistorySharedPreferences));
                         EventBus.getDefault().post(new PostUpdateEventToPostDetailFragment(post));
@@ -2676,7 +2676,7 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                     }
 
                     if (Account.ANONYMOUS_ACCOUNT.equals(mAccountName)) {
-                        ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
+                        ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId()); ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
                                 post.getId(), ReadPostType.ANONYMOUS_DOWNVOTED_POSTS,
                                 ReadPostsUtils.GetReadPostsLimit(mActivity.accountName, mPostHistorySharedPreferences));
                         EventBus.getDefault().post(new PostUpdateEventToPostDetailFragment(post));
@@ -2789,7 +2789,7 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                         } else {
                             saveButton.setIconResource(R.drawable.ic_bookmark_grey_24dp);
                             if (mAccountName.equals(Account.ANONYMOUS_ACCOUNT)) {
-                                ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
+                                ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId()); ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, mActivity.accountName,
                                         post.getId(), ReadPostType.ANONYMOUS_SAVED_POSTS,
                                         ReadPostsUtils.GetReadPostsLimit(mActivity.accountName, mPostHistorySharedPreferences));
                                 post.setSaved(!post.isSaved());

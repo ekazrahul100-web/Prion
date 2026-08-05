@@ -1722,7 +1722,7 @@ public class ViewUserDetailActivity extends BaseActivity implements SortTypeSele
     }
 
     @Override
-    public void markPostAsRead(Post post) {
+    public void markPostAsRead(Post post) { ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences != null ? mSharedPreferences : androidx.preference.PreferenceManager.getDefaultSharedPreferences(this), post.getId());
         int readPostsLimit = ReadPostsUtils.GetReadPostsLimit(accountName, mPostHistorySharedPreferences);
         ReadPostModification.insertReadPost(mRedditDataRoomDatabase, mExecutor, accountName, post.getId(), ReadPostType.READ_POSTS, readPostsLimit);
     }
