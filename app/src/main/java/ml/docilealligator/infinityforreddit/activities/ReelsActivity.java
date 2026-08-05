@@ -82,10 +82,13 @@ public class ReelsActivity extends BaseActivity {
     private int nsfwPosition = 0;
     private boolean isLoading = false;
     
+    @Nullable
     private String mAccountName;
+    @Nullable
     private String mAccessToken;
 
     private final Handler dwellHandler = new Handler(Looper.getMainLooper());
+    @Nullable
     private Runnable dwellRunnable;
     private int currentPosition = -1;
 
