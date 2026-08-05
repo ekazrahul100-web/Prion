@@ -346,7 +346,7 @@ public class ReelsActivity extends BaseActivity {
                     
                     ReadPostsListInterface readList = NullReadPostsList.getInstance();
                     if (mSharedPreferences.getBoolean("hide_read_posts_in_reels", false)) {
-                        readList = new ReadPostsList(ml.docilealligator.infinityforreddit.database.RedditDataRoomDatabase.getDatabase(ReelsActivity.this).readPostDao(), finalAccountName, false);
+                        readList = new ReadPostsList(ml.docilealligator.infinityforreddit.RedditDataRoomDatabase.getDatabase(ReelsActivity.this).readPostDao(), finalAccountName, false);
                     }
                     LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, readList);
                     String newAfter = ParsePost.getLastItem(response.body());

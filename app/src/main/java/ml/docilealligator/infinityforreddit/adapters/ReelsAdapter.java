@@ -100,9 +100,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.subredditText.setText("r/" + post.getSubredditName());
         holder.scoreText.setText(String.valueOf(post.getScore()));
         
-        holder.upvoteButton.setColorFilter(post.getVoteType() == APIUtils.DIR_UPVOTE ? ContextCompat.getColor(context, R.color.upvoted) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.downvoteButton.setColorFilter(post.getVoteType() == APIUtils.DIR_DOWNVOTE ? ContextCompat.getColor(context, R.color.downvoted) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.saveButton.setColorFilter(post.isSaved() ? ContextCompat.getColor(context, R.color.saved) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.upvoteButton.setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? android.graphics.Color.parseColor("#FF8B60") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.downvoteButton.setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? android.graphics.Color.parseColor("#9494FF") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.saveButton.setColorFilter(post.isSaved() ? android.graphics.Color.parseColor("#FFEB3B") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
 
 
         // We will manage playback separately when the page is selected
@@ -204,12 +204,12 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             upvoteButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
                     Post post = posts.get(getAdapterPosition());
-                    if (post.getVoteType() == APIUtils.DIR_UPVOTE) {
+                    if (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE)) {
                         post.setVoteType(0);
                         post.setScore(post.getScore() - 1);
                     } else {
-                        post.setScore(post.getScore() + (post.getVoteType() == APIUtils.DIR_DOWNVOTE ? 2 : 1));
-                        post.setVoteType(APIUtils.DIR_UPVOTE);
+                        post.setScore(post.getScore() + (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? 2 : 1));
+                        post.setVoteType(1);
                     }
                     notifyItemChanged(getAdapterPosition());
                     listener.onUpvote(post, getAdapterPosition());
@@ -218,12 +218,12 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             downvoteButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
                     Post post = posts.get(getAdapterPosition());
-                    if (post.getVoteType() == APIUtils.DIR_DOWNVOTE) {
+                    if (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE)) {
                         post.setVoteType(0);
                         post.setScore(post.getScore() + 1);
                     } else {
-                        post.setScore(post.getScore() - (post.getVoteType() == APIUtils.DIR_UPVOTE ? 2 : 1));
-                        post.setVoteType(APIUtils.DIR_DOWNVOTE);
+                        post.setScore(post.getScore() - (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? 2 : 1));
+                        post.setVoteType(-1);
                     }
                     notifyItemChanged(getAdapterPosition());
                     listener.onDownvote(post, getAdapterPosition());
@@ -254,9 +254,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     showLikeAnimation();
                     if (getAdapterPosition() != RecyclerView.NO_POSITION) {
                         Post post = posts.get(getAdapterPosition());
-                        if (post.getVoteType() != APIUtils.DIR_UPVOTE) {
-                            post.setScore(post.getScore() + (post.getVoteType() == APIUtils.DIR_DOWNVOTE ? 2 : 1));
-                            post.setVoteType(APIUtils.DIR_UPVOTE);
+                        if (!String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE)) {
+                            post.setScore(post.getScore() + (String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? 2 : 1));
+                            post.setVoteType(1);
                             notifyItemChanged(getAdapterPosition());
                             listener.onUpvote(post, getAdapterPosition());
                         }
