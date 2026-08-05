@@ -65,10 +65,6 @@ public class ReelsActivity extends BaseActivity {
     Retrofit mRetrofit;
 
     @Inject
-    @Named("oauth")
-    Retrofit mOauthRetrofit;
-
-    @Inject
     Executor mExecutor;
 
     private ViewPager2 viewPager;
@@ -157,7 +153,7 @@ public class ReelsActivity extends BaseActivity {
             public void onComments(Post post) {
                 SeenPostsManager.markSeen(mSharedPreferences, post.getId());
                 Intent intent = new Intent(ReelsActivity.this, ViewPostDetailActivity.class);
-                intent.putExtra(ViewPostDetailActivity.EXTRA_POST, post);
+                intent.putExtra(ViewPostDetailActivity.EXTRA_POST_DATA, post);
                 startActivity(intent);
             }
 
@@ -167,9 +163,9 @@ public class ReelsActivity extends BaseActivity {
                 SeenPostsManager.markSeen(mSharedPreferences, post.getId());
                 SaveThing.saveThing(mOauthRetrofit, mAccessToken, post.getFullName(), new SaveThing.SaveThingListener() {
                     @Override
-                    public void onSaveThingSuccess() {}
+                    public void success() {}
                     @Override
-                    public void onSaveThingFail() {}
+                    public void failed() {}
                 });
             }
 
