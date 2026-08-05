@@ -240,7 +240,7 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
     @Override
     public ListenableFuture<LoadResult<String, Post>> loadFuture(@NonNull LoadParams<String> loadParams) {
         RedditAPI api = retrofit.create(RedditAPI.class);
-        return loadWithAccumulation(afterKey, api, 0, posts.size());
+        return loadWithAccumulation(loadParams.getKey(), api, 0, posts.size());
     }
 
     private ListenableFuture<LoadResult<String, Post>> loadWithAccumulation(@Nullable String afterKey, RedditAPI api, int accumulatedSoFar, int initialPostsSize) {

@@ -32,7 +32,7 @@ import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
-import ml.docilealligator.infinityforreddit.utils.NullReadPostsList;
+import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -174,7 +174,8 @@ public class ReelsActivity extends BaseActivity {
                 if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
                     response = api.getAnonymousFrontPageOrMultiredditPostsListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getUserAgent(this)).get();
                 } else {
-                    response = api.getSubredditBestPostsOauthListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getOAuthHeader(this)).get();
+                    String accessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
+                    response = api.getSubredditBestPostsOauthListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getOAuthHeader(accessToken)).get();
                 }
                 
                 if (response != null && response.isSuccessful() && response.body() != null) {
