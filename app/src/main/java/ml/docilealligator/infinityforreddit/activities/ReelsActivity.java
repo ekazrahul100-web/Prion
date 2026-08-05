@@ -176,7 +176,11 @@ public class ReelsActivity extends BaseActivity {
             @Override
             public void onShare(Post post) {
                 SeenPostsManager.markSeen(mSharedPreferences, post.getId());
-                APIUtils.sharePost(ReelsActivity.this, post.getTitle(), post.getPermalink());
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, post.getTitle());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, post.getPermalink());
+                startActivity(Intent.createChooser(shareIntent, "Share"));
             }
         };
 
