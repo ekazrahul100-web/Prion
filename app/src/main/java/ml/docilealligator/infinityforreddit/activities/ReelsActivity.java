@@ -173,7 +173,7 @@ public class ReelsActivity extends BaseActivity {
                 if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
                     response = api.getAnonymousFrontPageOrMultiredditPostsListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getUserAgent(this)).get();
                 } else {
-                    response = api.getSubredditPostsOauthListenableFuture(APIUtils.getOAuthHeader(this), subreddit, after, SortType.Type.HOT, null, 100).get();
+                    response = api.getSubredditBestPostsOauthListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getOAuthHeader(this)).get();
                 }
                 
                 if (response != null && response.isSuccessful() && response.body() != null) {
