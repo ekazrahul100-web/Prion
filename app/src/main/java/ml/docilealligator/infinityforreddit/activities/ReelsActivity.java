@@ -57,6 +57,7 @@ public class ReelsActivity extends BaseActivity {
     Retrofit mOauthRetrofit;
 
     @Inject
+    @Named("no_oauth")
     Retrofit mRetrofit;
 
     @Inject
