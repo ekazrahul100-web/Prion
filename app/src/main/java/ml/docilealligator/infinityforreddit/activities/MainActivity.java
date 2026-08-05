@@ -1009,7 +1009,9 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
                     @Override
                     public void onMenuClick(int stringId) {
                         Intent intent = null;
-                        if (stringId == R.string.profile) {
+                        if (stringId == -100) {
+                            intent = new Intent(MainActivity.this, ReelsActivity.class);
+                        } else if (stringId == R.string.profile) {
                             intent = new Intent(MainActivity.this, ViewUserDetailActivity.class);
                             intent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, accountName);
                         } else if (stringId == R.string.subscriptions) {

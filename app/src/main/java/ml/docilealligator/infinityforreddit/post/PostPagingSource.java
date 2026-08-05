@@ -240,21 +240,42 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
     @Override
     public ListenableFuture<LoadResult<String, Post>> loadFuture(@NonNull LoadParams<String> loadParams) {
         RedditAPI api = retrofit.create(RedditAPI.class);
+        return loadWithAccumulation(afterKey, api, 0, posts.size());
+    }
+
+    private ListenableFuture<LoadResult<String, Post>> loadWithAccumulation(@Nullable String afterKey, RedditAPI api, int accumulatedSoFar, int initialPostsSize) {
+        ListenableFuture<LoadResult<String, Post>> singlePage = loadSinglePage(afterKey, api);
+        return Futures.transformAsync(singlePage, result -> {
+            if (result instanceof LoadResult.Page) {
+                LoadResult.Page<String, Post> page = (LoadResult.Page<String, Post>) result;
+                int newAccumulated = accumulatedSoFar + page.getData().size();
+                if (newAccumulated < 10 && page.getNextKey() != null) {
+                    return loadWithAccumulation(page.getNextKey(), api, newAccumulated, initialPostsSize);
+                } else {
+                    List<Post> combined = new ArrayList<>(posts.subList(initialPostsSize, posts.size()));
+                    return Futures.immediateFuture(new LoadResult.Page<>(combined, null, page.getNextKey()));
+                }
+            }
+            return Futures.immediateFuture(result);
+        }, executor);
+    }
+
+    private ListenableFuture<LoadResult<String, Post>> loadSinglePage(@Nullable String afterKey, RedditAPI api) {
         switch (postType) {
             case PostType.FRONT_PAGE:
-                return loadHomePosts(loadParams, api);
+                return loadHomePosts(afterKey, api);
             case PostType.SUBREDDIT:
-                return loadSubredditPosts(loadParams, api);
+                return loadSubredditPosts(afterKey, api);
             case PostType.USER:
-                return loadUserPosts(loadParams, api);
+                return loadUserPosts(afterKey, api);
             case PostType.SEARCH:
-                return loadSearchPosts(loadParams, api);
+                return loadSearchPosts(afterKey, api);
             case PostType.DUPLICATES:
-                return loadDuplicatesPosts(loadParams, api);
+                return loadDuplicatesPosts(afterKey, api);
             case PostType.MULTIREDDIT:
-                return loadMultiRedditPosts(loadParams, api);
+                return loadMultiRedditPosts(afterKey, api);
             default:
-                return loadAnonymousFrontPageOrMultiredditPosts(loadParams, api);
+                return loadAnonymousFrontPageOrMultiredditPosts(afterKey, api);
         }
     }
 
@@ -338,10 +359,10 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         }
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadHomePosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadHomePosts(@Nullable String originalAfterKey, RedditAPI api) {
         ListenableFuture<Response<String>> bestPost;
         String afterKey;
-        if (loadParams.getKey() == null) {
+        if (originalAfterKey == null) {
             boolean savePostFeedScrolledPosition = sortType != null && sortType.getType() == SortType.Type.BEST && sharedPreferences.getBoolean(SharedPreferencesUtils.SAVE_FRONT_PAGE_SCROLLED_POSITION, false);
             if (savePostFeedScrolledPosition && postFeedScrolledPositionSharedPreferences != null) {
                 String accountNameForCache = accountName.equals(Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.FRONT_PAGE_SCROLLED_POSITION_ANONYMOUS : accountName;
@@ -350,7 +371,7 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
                 afterKey = null;
             }
         } else {
-            afterKey = loadParams.getKey();
+            afterKey = originalAfterKey;
         }
         bestPost = api.getBestPostsListenableFuture(sortType.getType(), sortType.getTime(), afterKey,
                 APIUtils.getOAuthHeader(accessToken));
@@ -365,26 +386,26 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
                 IOException.class, LoadResult.Error::new, executor);
     }
 
-    private ListenableFuture<Response<String>> fetchSubredditPosts(LoadParams<String> loadParams, RedditAPI api, int limit) {
+    private ListenableFuture<Response<String>> fetchSubredditPosts(@Nullable String afterKey, RedditAPI api, int limit) {
         if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
             return api.getSubredditBestPostsListenableFuture(subredditOrUserName, sortType.getType(),
-                    sortType.getTime(), loadParams.getKey(), limit);
+                    sortType.getTime(), afterKey, limit);
         } else {
             return api.getSubredditBestPostsOauthListenableFuture(subredditOrUserName, sortType.getType(),
-                    sortType.getTime(), loadParams.getKey(), limit,
+                    sortType.getTime(), afterKey, limit,
                     APIUtils.getOAuthHeader(accessToken));
         }
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadSubredditPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadSubredditPosts(@Nullable String afterKey, RedditAPI api) {
         int[] limit = {APIUtils.subredditAPICallLimit(subredditOrUserName)};
-        ListenableFuture<Response<String>> subredditPost = fetchSubredditPosts(loadParams, api, limit[0]);
+        ListenableFuture<Response<String>> subredditPost = fetchSubredditPosts(afterKey, api, limit[0]);
 
         // Retry with halved limit on HTTP 500
         ListenableFuture<Response<String>> retryOnce = Futures.transformAsync(subredditPost, response -> {
             if (response.code() == HTTP_INTERNAL_SERVER_ERROR) {
                 limit[0] /= 2;
-                return fetchSubredditPosts(loadParams, api, limit[0]);
+                return fetchSubredditPosts(afterKey, api, limit[0]);
             }
             return Futures.immediateFuture(response);
         }, executor);
@@ -393,7 +414,7 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         ListenableFuture<Response<String>> retryTwice = Futures.transformAsync(retryOnce, response -> {
             if (response.code() == HTTP_INTERNAL_SERVER_ERROR) {
                 limit[0] /= 2;
-                return fetchSubredditPosts(loadParams, api, limit[0]);
+                return fetchSubredditPosts(afterKey, api, limit[0]);
             }
             return Futures.immediateFuture(response);
         }, executor);
@@ -427,8 +448,8 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         return postType == PostType.USER && USER_WHERE_SAVED.equals(userWhere);
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadUserPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
-        boolean reset = loadParams.getKey() == null;
+    private ListenableFuture<LoadResult<String, Post>> loadUserPosts(@Nullable String afterKey, RedditAPI api) {
+        boolean reset = afterKey == null;
 
         if (isSavedSearchActive()) {
             // A refined query reuses the listing already walked for this search session (see
@@ -451,12 +472,12 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
                         return Futures.immediateFuture(filterToPage(hit.posts));
                     }
                     // Cache miss (file cleared / incomplete): walk the listing over the network.
-                    return catchErrors(loadAllUserPostsFiltered(api, loadParams.getKey(), 0));
+                    return catchErrors(loadAllUserPostsFiltered(api, afterKey, 0));
                 }, executor);
             }
             // Load the entire saved listing up front, then filter, so every match is presented at
             // once (with the normal loading indicator) rather than trickling in as pages arrive.
-            return catchErrors(loadAllUserPostsFiltered(api, loadParams.getKey(), 0));
+            return catchErrors(loadAllUserPostsFiltered(api, afterKey, 0));
         }
 
         // Tab open (no search): serve the whole saved list from the fresh persistent cache with no
@@ -469,10 +490,10 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
                     return Futures.<LoadResult<String, Post>>immediateFuture(new LoadResult.Page<>(hit.posts, null, null));
                 }
                 // Cache miss after a fresh check (file cleared / incomplete): fall back to the network.
-                return catchErrors(loadUserPostsWithKey(api, loadParams.getKey()));
+                return catchErrors(loadUserPostsWithKey(api, afterKey));
             }, executor);
         }
-        return catchErrors(loadUserPostsWithKey(api, loadParams.getKey()));
+        return catchErrors(loadUserPostsWithKey(api, afterKey));
     }
 
     private LoadResult<String, Post> filterToPage(List<Post> unfiltered) {
@@ -607,23 +628,23 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         }, executor);
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadSearchPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadSearchPosts(@Nullable String afterKey, RedditAPI api) {
         ListenableFuture<Response<String>> searchPosts;
         if (subredditOrUserName == null) {
             if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
-                searchPosts = api.searchPostsListenableFuture(query, loadParams.getKey(), sortType.getType(), sortType.getTime(),
+                searchPosts = api.searchPostsListenableFuture(query, afterKey, sortType.getType(), sortType.getTime(),
                         trendingSource);
             } else {
-                searchPosts = api.searchPostsOauthListenableFuture(query, loadParams.getKey(), sortType.getType(),
+                searchPosts = api.searchPostsOauthListenableFuture(query, afterKey, sortType.getType(),
                         sortType.getTime(), trendingSource, APIUtils.getOAuthHeader(accessToken));
             }
         } else {
             if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
                 searchPosts = api.searchPostsInSpecificSubredditListenableFuture(subredditOrUserName, query,
-                        sortType.getType(), sortType.getTime(), loadParams.getKey());
+                        sortType.getType(), sortType.getTime(), afterKey);
             } else {
                 searchPosts = api.searchPostsInSpecificSubredditOauthListenableFuture(subredditOrUserName, query,
-                        sortType.getType(), sortType.getTime(), loadParams.getKey(),
+                        sortType.getType(), sortType.getTime(), afterKey,
                         APIUtils.getOAuthHeader(accessToken));
             }
         }
@@ -638,13 +659,13 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
                 IOException.class, LoadResult.Error::new, executor);
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadDuplicatesPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadDuplicatesPosts(@Nullable String afterKey, RedditAPI api) {
         ListenableFuture<Response<String>> duplicatesPosts;
         if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
-            duplicatesPosts = api.getDuplicatesListenableFuture(subredditOrUserName, loadParams.getKey(),
+            duplicatesPosts = api.getDuplicatesListenableFuture(subredditOrUserName, afterKey,
                     APIUtils.ANONYMOUS_USER_AGENT);
         } else {
-            duplicatesPosts = api.getDuplicatesOauthListenableFuture(subredditOrUserName, loadParams.getKey(),
+            duplicatesPosts = api.getDuplicatesOauthListenableFuture(subredditOrUserName, afterKey,
                     APIUtils.getOAuthHeader(accessToken));
         }
 
@@ -700,15 +721,15 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         }
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadMultiRedditPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadMultiRedditPosts(@Nullable String afterKey, RedditAPI api) {
         // When searching within multi-reddit, keep original behavior (no user post merging)
         if (query != null && !query.isEmpty()) {
             ListenableFuture<Response<String>> multiRedditPosts;
             if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
-                multiRedditPosts = api.searchMultiRedditPostsListenableFuture(multiRedditPath, query, loadParams.getKey(),
+                multiRedditPosts = api.searchMultiRedditPostsListenableFuture(multiRedditPath, query, afterKey,
                         sortType.getType(), sortType.getTime());
             } else {
-                multiRedditPosts = api.searchMultiRedditPostsOauthListenableFuture(multiRedditPath, query, loadParams.getKey(),
+                multiRedditPosts = api.searchMultiRedditPostsOauthListenableFuture(multiRedditPath, query, afterKey,
                         sortType.getType(), sortType.getTime(), APIUtils.getOAuthHeader(accessToken));
             }
 
@@ -717,9 +738,9 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         }
 
         // Parse composite after key
-        String multiAfterKey = getMainAfterKey(loadParams.getKey());
-        Map<String, String> currentUserAfterKeys = parseUserAfterKeys(loadParams.getKey());
-        final boolean isInitialLoad = loadParams.getKey() == null;
+        String multiAfterKey = getMainAfterKey(afterKey);
+        Map<String, String> currentUserAfterKeys = parseUserAfterKeys(afterKey);
+        final boolean isInitialLoad = afterKey == null;
 
         // Determine if we have users to merge (or might have on first load)
         boolean hasUsers = multiRedditUsernames != null && !multiRedditUsernames.isEmpty();
@@ -966,7 +987,7 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         return Futures.catching(partial, IOException.class, LoadResult.Error::new, executor);
     }
 
-    private ListenableFuture<LoadResult<String, Post>> loadAnonymousFrontPageOrMultiredditPosts(@NonNull LoadParams<String> loadParams, RedditAPI api) {
+    private ListenableFuture<LoadResult<String, Post>> loadAnonymousFrontPageOrMultiredditPosts(@Nullable String afterKey, RedditAPI api) {
         // For anonymous multireddit, extract user entries from concatenated name on first call
         if (postType == PostType.ANONYMOUS_MULTIREDDIT && !multiRedditUsernamesFetched) {
             multiRedditUsernamesFetched = true;
@@ -998,7 +1019,7 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         // If no users to merge, use original behavior
         if (multiRedditUsernames == null || multiRedditUsernames.isEmpty()) {
             ListenableFuture<Response<String>> anonymousHomePosts = api.getAnonymousFrontPageOrMultiredditPostsListenableFuture(
-                    subredditOrUserName, sortType.getType(), sortType.getTime(), loadParams.getKey(),
+                    subredditOrUserName, sortType.getType(), sortType.getTime(), afterKey,
                     APIUtils.subredditAPICallLimit(subredditOrUserName), APIUtils.ANONYMOUS_USER_AGENT);
 
             ListenableFuture<LoadResult<String, Post>> pageFuture = Futures.transform(anonymousHomePosts, this::transformData, executor);
@@ -1008,9 +1029,9 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
         }
 
         // Parse composite after key
-        String mainAfterKey = getMainAfterKey(loadParams.getKey());
-        Map<String, String> currentUserAfterKeys = parseUserAfterKeys(loadParams.getKey());
-        final boolean isInitialLoad = loadParams.getKey() == null;
+        String mainAfterKey = getMainAfterKey(afterKey);
+        Map<String, String> currentUserAfterKeys = parseUserAfterKeys(afterKey);
+        final boolean isInitialLoad = afterKey == null;
 
         boolean hasSubreddits = subredditOnlyName != null && !subredditOnlyName.isEmpty();
 

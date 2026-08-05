@@ -121,6 +121,7 @@ public interface AppComponent {
     ml.docilealligator.infinityforreddit.apimonitor.ApiCallTracker apiCallTracker();
 
     void inject(MainActivity mainActivity);
+    void inject(ml.docilealligator.infinityforreddit.activities.ReelsActivity reelsActivity);
 
     void inject(LoginActivity loginActivity);
 

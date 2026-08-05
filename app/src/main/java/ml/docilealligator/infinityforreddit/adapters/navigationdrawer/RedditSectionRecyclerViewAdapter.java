@@ -79,19 +79,16 @@ public class RedditSectionRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                 notifyItemChanged(holder.getBindingAdapterPosition());
             });
         } else if (holder instanceof MenuItemViewHolder) {
-            /*int stringId = 0;
-            int drawableId = 0;
-
-            ((MenuItemViewHolder) holder).menuTextView.setText(stringId);
-            ((MenuItemViewHolder) holder).imageView.setImageDrawable(ContextCompat.getDrawable(baseActivity, drawableId));
-            int finalStringId = stringId;
-            holder.itemView.setOnClickListener(view -> itemClickListener.onMenuClick(finalStringId));*/
+            ((MenuItemViewHolder) holder).binding.textViewItemNavDrawerMenuItem.setText("TikTok Feed");
+            ((MenuItemViewHolder) holder).binding.imageViewItemNavDrawerMenuItem.setImageDrawable(
+                androidx.core.content.ContextCompat.getDrawable(baseActivity, R.drawable.ic_video_day_night_24dp));
+            holder.itemView.setOnClickListener(view -> itemClickListener.onMenuClick(-100)); // Special ID for Reels
         }
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return collapseRedditSection ? 1 : 1 + REDDIT_SECTION_ITEMS;
     }
 
     class MenuGroupTitleViewHolder extends RecyclerView.ViewHolder {
