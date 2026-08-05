@@ -30,10 +30,21 @@ import ml.docilealligator.infinityforreddit.post.Post;
 
 public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHolder> {
 
+    public interface InteractionListener {
+        void onUpvote(Post post, int position);
+        void onDownvote(Post post, int position);
+        void onComments(Post post);
+        void onSave(Post post);
+        void onShare(Post post);
+    }
+
     private final Context context;
+    private final InteractionListener listener;
     private final List<Post> posts = new ArrayList<>();
-    public ReelsAdapter(Context context) {
+    
+    public ReelsAdapter(Context context, InteractionListener listener) {
         this.context = context;
+        this.listener = listener;
     }
 
     private int currentPlayingPosition = -1;
@@ -44,6 +55,14 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         int start = posts.size();
         posts.addAll(newPosts);
         notifyItemRangeInserted(start, newPosts.size());
+    }
+
+    @Nullable
+    public Post getPostAt(int position) {
+        if (position >= 0 && position < posts.size()) {
+            return posts.get(position);
+        }
+        return null;
     }
 
     public void clear() {
@@ -147,11 +166,39 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 playerView.setPlayer(null);
             }
 
+            upvoteButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    listener.onUpvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                }
+            });
+            downvoteButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    listener.onDownvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                }
+            });
+            commentsButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    listener.onComments(posts.get(getAdapterPosition()));
+                }
+            });
+            saveButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    listener.onSave(posts.get(getAdapterPosition()));
+                }
+            });
+            shareButton.setOnClickListener(v -> {
+                if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    listener.onShare(posts.get(getAdapterPosition()));
+                }
+            });
+
             GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     showLikeAnimation();
-                    // In a real app we would call an API here
+                    if (getAdapterPosition() != RecyclerView.NO_POSITION) {
+                        listener.onUpvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                    }
                     return true;
                 }
 

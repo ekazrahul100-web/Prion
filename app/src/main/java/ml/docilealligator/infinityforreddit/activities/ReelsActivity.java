@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
-
+import android.content.Intent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -34,6 +34,8 @@ import ml.docilealligator.infinityforreddit.postfilter.PostFilter;
 import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
+import ml.docilealligator.infinityforreddit.thing.SaveThing;
+import ml.docilealligator.infinityforreddit.thing.VoteThing;
 import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Call;
@@ -63,6 +65,10 @@ public class ReelsActivity extends BaseActivity {
     Retrofit mRetrofit;
 
     @Inject
+    @Named("oauth")
+    Retrofit mOauthRetrofit;
+
+    @Inject
     Executor mExecutor;
 
     private ViewPager2 viewPager;
@@ -74,6 +80,13 @@ public class ReelsActivity extends BaseActivity {
     @Nullable
     private String after = null;
     private boolean isLoading = false;
+    
+    private String mAccountName;
+    private String mAccessToken;
+
+    private final Handler dwellHandler = new Handler(Looper.getMainLooper());
+    private Runnable dwellRunnable;
+    private int currentPosition = -1;
 
     private final String[] NSFW_POOL = {
             "nsfw_gif", "gonewild", "RealGirls", "asiansgonewild",
@@ -98,7 +111,61 @@ public class ReelsActivity extends BaseActivity {
         sfwTextView = findViewById(R.id.sfw_text_view);
         nsfwTextView = findViewById(R.id.nsfw_text_view);
 
-        adapter = new ReelsAdapter(this);
+        mAccountName = mSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
+        mAccessToken = mSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
+
+        adapter = new ReelsAdapter(this, new ReelsAdapter.InteractionListener() {
+            @Override
+            public void onUpvote(Post post, int position) {
+                // Implement VoteThing
+                if (mAccessToken == null) return;
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                VoteThing.voteThing(ReelsActivity.this, mOauthRetrofit, mAccessToken, new VoteThing.VoteThingListener() {
+                    @Override
+                    public void onVoteThingSuccess(int position1) {}
+                    @Override
+                    public void onVoteThingFail(int position1) {}
+                }, post.getFullName(), APIUtils.DIR_UPVOTE, position);
+            }
+
+            @Override
+            public void onDownvote(Post post, int position) {
+                if (mAccessToken == null) return;
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                VoteThing.voteThing(ReelsActivity.this, mOauthRetrofit, mAccessToken, new VoteThing.VoteThingListener() {
+                    @Override
+                    public void onVoteThingSuccess(int position1) {}
+                    @Override
+                    public void onVoteThingFail(int position1) {}
+                }, post.getFullName(), APIUtils.DIR_DOWNVOTE, position);
+            }
+
+            @Override
+            public void onComments(Post post) {
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                Intent intent = new Intent(ReelsActivity.this, ViewPostDetailActivity.class);
+                intent.putExtra(ViewPostDetailActivity.EXTRA_POST, post);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onSave(Post post) {
+                if (mAccessToken == null) return;
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                SaveThing.saveThing(mOauthRetrofit, mAccessToken, post.getFullName(), new SaveThing.SaveThingListener() {
+                    @Override
+                    public void onSaveThingSuccess() {}
+                    @Override
+                    public void onSaveThingFail() {}
+                });
+            }
+
+            @Override
+            public void onShare(Post post) {
+                SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                APIUtils.sharePost(ReelsActivity.this, post.getTitle(), post.getPermalink());
+            }
+        });
         viewPager.setAdapter(adapter);
         viewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
 
@@ -126,6 +193,20 @@ public class ReelsActivity extends BaseActivity {
                 if (position >= adapter.getItemCount() - 5 && !isLoading) {
                     fetchVideos();
                 }
+
+                if (dwellRunnable != null) {
+                    dwellHandler.removeCallbacks(dwellRunnable);
+                }
+                currentPosition = position;
+                dwellRunnable = () -> {
+                    if (currentPosition == position) {
+                        Post p = adapter.getPostAt(position);
+                        if (p != null && mSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SUBREDDITS_BASE, false)) {
+                            SeenPostsManager.markSeen(mSharedPreferences, p.getId());
+                        }
+                    }
+                };
+                dwellHandler.postDelayed(dwellRunnable, 3000);
             }
         });
 
@@ -202,9 +283,10 @@ public class ReelsActivity extends BaseActivity {
                         for (Post p : posts) {
                             if (p.getPostType() == Post.VIDEO_TYPE || p.getPostType() == Post.GIF_TYPE) {
                                 if (isNsfwMode && !p.isNSFW()) continue;
-                                if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId())) continue;
+                                if (mSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SUBREDDITS_BASE, false)) {
+                                    if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId())) continue;
+                                }
                                 
-                                SeenPostsManager.markSeen(mSharedPreferences, p.getId());
                                 videos.add(p);
                             }
                         }

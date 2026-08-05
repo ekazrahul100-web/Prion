@@ -321,14 +321,13 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
             if (existingPostIds.contains(p.getId())) {
                 continue;
             }
-            if (sharedPreferences != null && SeenPostsManager.hasSeen(sharedPreferences, p.getId())) {
-                continue;
+            if (sharedPreferences != null && sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_IN_SUBREDDITS_BASE, false)) {
+                if (SeenPostsManager.hasSeen(sharedPreferences, p.getId())) {
+                    continue;
+                }
             }
 
             existingPostIds.add(p.getId());
-            if (sharedPreferences != null) {
-                SeenPostsManager.markSeen(sharedPreferences, p.getId());
-            }
             posts.add(p);
         }
 
