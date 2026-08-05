@@ -27,6 +27,7 @@ import ml.docilealligator.infinityforreddit.readpost.ReadPostType;
 import ml.docilealligator.infinityforreddit.readpost.ReadPostsListInterface;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
+import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
 import ml.docilealligator.infinityforreddit.utils.JSONUtils;
 import ml.docilealligator.infinityforreddit.utils.SavedPostCache;
 import ml.docilealligator.infinityforreddit.utils.SavedSearchCache;
@@ -320,8 +321,14 @@ public class PostPagingSource extends ListenableFuturePagingSource<String, Post>
             if (existingPostIds.contains(p.getId())) {
                 continue;
             }
+            if (sharedPreferences != null && SeenPostsManager.hasSeen(sharedPreferences, p.getId())) {
+                continue;
+            }
 
             existingPostIds.add(p.getId());
+            if (sharedPreferences != null) {
+                SeenPostsManager.markSeen(sharedPreferences, p.getId());
+            }
             posts.add(p);
         }
 

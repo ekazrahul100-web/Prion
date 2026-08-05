@@ -31,6 +31,7 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.postfilter.PostFilter;
+import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
@@ -99,6 +100,7 @@ public class ReelsActivity extends BaseActivity {
 
         adapter = new ReelsAdapter(this);
         viewPager.setAdapter(adapter);
+        viewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
 
         sfwTextView.setOnClickListener(v -> {
             if (isNsfwMode) {
@@ -183,7 +185,16 @@ public class ReelsActivity extends BaseActivity {
                 }
                 
                 if (response != null && response.isSuccessful() && response.body() != null) {
-                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, new PostFilter(), NullReadPostsList.getInstance());
+                    PostFilter filter = new PostFilter();
+                    filter.allowNSFW = true;
+                    filter.containVideoType = true;
+                    filter.containGifType = true;
+                    filter.containTextType = true;
+                    filter.containImageType = true;
+                    filter.containLinkType = true;
+                    filter.containGalleryType = true;
+                    
+                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, NullReadPostsList.getInstance());
                     after = ParsePost.getLastItem(response.body());
                     
                     List<Post> videos = new ArrayList<>();
@@ -191,6 +202,9 @@ public class ReelsActivity extends BaseActivity {
                         for (Post p : posts) {
                             if (p.getPostType() == Post.VIDEO_TYPE || p.getPostType() == Post.GIF_TYPE) {
                                 if (isNsfwMode && !p.isNSFW()) continue;
+                                if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId())) continue;
+                                
+                                SeenPostsManager.markSeen(mSharedPreferences, p.getId());
                                 videos.add(p);
                             }
                         }
