@@ -52,6 +52,23 @@
                 android:padding="8dp" />
 
             <TextView
+                android:id="@+id/subscribed_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Subscribed"
+                android:textSize="18sp"
+                android:textColor="#88ffffff"
+                android:padding="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" | "
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:padding="8dp" />
+
+            <TextView
                 android:id="@+id/nsfw_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

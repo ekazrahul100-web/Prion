@@ -1940,11 +1940,14 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
     @Override
     public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
         if (holder instanceof PostViewHolder) {
-            if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
-                int position = ((PostViewHolder) holder).currentPosition;
-                if (position < getItemCount() && position >= 0) {
-                    Post post = getItem(position);
-                    if (post != null) { ((PostViewHolder) holder).markPostRead(post, false); }
+            int position = ((PostViewHolder) holder).currentPosition;
+            if (position < getItemCount() && position >= 0) {
+                Post post = getItem(position);
+                if (post != null) {
+                    ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                    if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
+                        ((PostViewHolder) holder).markPostRead(post, false);
+                    }
                 }
             }
 
@@ -2040,11 +2043,14 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                 }
             }
         } else if (holder instanceof PostGalleryViewHolder) {
-            if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
-                int position = ((PostGalleryViewHolder) holder).currentPosition;
-                if (position < super.getItemCount() && position >= 0) {
-                    Post post = getItem(position);
-                    if (post != null) { ((PostGalleryViewHolder) holder).markPostRead(post, false); }
+            int position = ((PostGalleryViewHolder) holder).currentPosition;
+            if (position < super.getItemCount() && position >= 0) {
+                Post post = getItem(position);
+                if (post != null) {
+                    ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                    if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
+                        ((PostGalleryViewHolder) holder).markPostRead(post, false);
+                    }
                 }
             }
             holder.itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
@@ -2058,11 +2064,14 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
             ((PostGalleryViewHolder) holder).binding.videoOrGifIndicatorImageViewItemPostGallery.setVisibility(View.GONE);
             ((PostGalleryViewHolder) holder).binding.imageViewNoPreviewItemPostGallery.setVisibility(View.GONE);
         } else if (holder instanceof PostGalleryBaseGalleryTypeViewHolder) {
-            if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
-                int position = ((PostGalleryBaseGalleryTypeViewHolder) holder).currentPosition;
-                if (position < super.getItemCount() && position >= 0) {
-                    Post post = getItem(position);
-                    if (post != null) { ((PostGalleryBaseGalleryTypeViewHolder) holder).markPostRead(post, false); }
+            int position = ((PostGalleryBaseGalleryTypeViewHolder) holder).currentPosition;
+            if (position < super.getItemCount() && position >= 0) {
+                Post post = getItem(position);
+                if (post != null) {
+                    ml.docilealligator.infinityforreddit.utils.SeenPostsManager.markSeen(mSharedPreferences, post.getId());
+                    if (mHandleReadPost && mMarkPostsAsReadOnScroll) {
+                        ((PostGalleryBaseGalleryTypeViewHolder) holder).markPostRead(post, false);
+                    }
                 }
             }
             holder.itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
