@@ -22,7 +22,9 @@ import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.post.Post;
@@ -48,8 +50,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     }
 
     private int currentPlayingPosition = -1;
-    @Nullable
-    private ExoPlayer currentPlayer;
+    private final Map<Integer, ExoPlayer> players = new HashMap<>();
 
     public void addPosts(List<Post> newPosts) {
         int start = posts.size();
@@ -65,7 +66,19 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         return null;
     }
 
+    public void releasePlayers() {
+        for (ExoPlayer player : players.values()) {
+            if (player != null) {
+                player.stop();
+                player.release();
+            }
+        }
+        players.clear();
+        notifyDataSetChanged();
+    }
+
     public void clear() {
+        releasePlayers();
         posts.clear();
         notifyDataSetChanged();
     }
@@ -103,32 +116,50 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     }
 
     public void playVideoAt(int position) {
-        if (currentPlayer != null) {
-            currentPlayer.stop();
-            currentPlayer.release();
-            currentPlayer = null;
+        currentPlayingPosition = position;
+
+        List<Integer> toRemove = new ArrayList<>();
+        for (Integer pos : players.keySet()) {
+            if (pos < position - 1 || pos > position + 1) {
+                toRemove.add(pos);
+            }
+        }
+        for (Integer pos : toRemove) {
+            ExoPlayer p = players.remove(pos);
+            if (p != null) {
+                p.stop();
+                p.release();
+            }
         }
 
-        currentPlayingPosition = position;
-        if (position >= 0 && position < posts.size()) {
-            Post post = posts.get(position);
-            String url = post.getVideoUrl();
-            if (url == null || url.isEmpty()) {
-                url = post.getUrl();
-            }
+        for (int i = position - 1; i <= position + 1; i++) {
+            if (i >= 0 && i < posts.size()) {
+                if (!players.containsKey(i)) {
+                    Post post = posts.get(i);
+                    String url = post.getVideoUrl();
+                    if (url == null || url.isEmpty()) {
+                        url = post.getUrl();
+                    }
 
-            currentPlayer = new ExoPlayer.Builder(context).build();
-            currentPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
-            
-            DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
-            ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(Uri.parse(url)));
-            
-            currentPlayer.setMediaSource(mediaSource);
-            currentPlayer.prepare();
-            currentPlayer.setPlayWhenReady(true);
-            
-            notifyItemChanged(position); // to bind the player to the view
+                    ExoPlayer player = new ExoPlayer.Builder(context).build();
+                    player.setRepeatMode(Player.REPEAT_MODE_ALL);
+
+                    DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
+                    ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(url)));
+
+                    player.setMediaSource(mediaSource);
+                    player.prepare();
+                    player.setPlayWhenReady(i == position);
+                    players.put(i, player);
+                    notifyItemChanged(i);
+                } else {
+                    ExoPlayer p = players.get(i);
+                    if (p != null) {
+                        p.setPlayWhenReady(i == position);
+                    }
+                }
+            }
         }
     }
 
@@ -160,11 +191,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         }
 
         public void setupGestures() {
-            if (getAdapterPosition() == currentPlayingPosition && currentPlayer != null) {
-                playerView.setPlayer(currentPlayer);
-            } else {
-                playerView.setPlayer(null);
-            }
+            ExoPlayer player = players.get(getAdapterPosition());
+            playerView.setPlayer(player);
 
             upvoteButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
@@ -204,11 +232,11 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
-                    if (currentPlayer != null && getAdapterPosition() == currentPlayingPosition) {
-                        if (currentPlayer.isPlaying()) {
-                            currentPlayer.pause();
+                    if (player != null && getAdapterPosition() == currentPlayingPosition) {
+                        if (player.isPlaying()) {
+                            player.pause();
                         } else {
-                            currentPlayer.play();
+                            player.play();
                         }
                     }
                     return true;
