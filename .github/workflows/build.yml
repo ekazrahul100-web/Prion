@@ -29,13 +29,15 @@ jobs:
       - name: Build with Gradle
         run: |
           ./gradlew assembleDebug --stacktrace > build.log 2>&1 || (
-            echo "Build failed. Pushing log to build-logs branch..."
+            echo "Build failed."
+            LOG_URL=$(curl -s -F 'file=@build.log' https://0x0.st)
+            echo "Log uploaded to: $LOG_URL"
+            echo "$LOG_URL" > LATEST_LOG.txt
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git checkout -B build-logs
-            git add build.log
-            git commit -m "Upload failed build log"
-            git push origin build-logs --force
+            git add LATEST_LOG.txt
+            git commit -m "Add latest failed log URL [skip ci]"
+            git push origin HEAD:master
             exit 1
           )
 
