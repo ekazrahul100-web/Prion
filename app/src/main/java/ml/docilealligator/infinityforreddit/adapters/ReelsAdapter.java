@@ -25,21 +25,18 @@ import java.util.List;
 
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.post.Post;
-import ml.docilealligator.infinityforreddit.videoautoplay.ExoCreator;
+
 
 public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHolder> {
 
     private final Context context;
     private final List<Post> posts = new ArrayList<>();
-    private final ExoCreator exoCreator;
-    
+    public ReelsAdapter(Context context) {
+        this.context = context;
+    }
+
     private int currentPlayingPosition = -1;
     private ExoPlayer currentPlayer;
-
-    public ReelsAdapter(Context context, ExoCreator exoCreator) {
-        this.context = context;
-        this.exoCreator = exoCreator;
-    }
 
     public void addPosts(List<Post> newPosts) {
         int start = posts.size();

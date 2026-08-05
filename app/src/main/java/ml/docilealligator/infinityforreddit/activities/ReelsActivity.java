@@ -28,14 +28,12 @@ import ml.docilealligator.infinityforreddit.account.Account;
 import ml.docilealligator.infinityforreddit.adapters.ReelsAdapter;
 import ml.docilealligator.infinityforreddit.apis.RedditAPI;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
-import ml.docilealligator.infinityforreddit.customviews.LoopAvailableExoCreator;
 import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.utils.NullReadPostsList;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
-import ml.docilealligator.infinityforreddit.videoautoplay.ExoCreator;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -68,7 +66,6 @@ public class ReelsActivity extends BaseActivity {
     private ReelsAdapter adapter;
     private TextView sfwTextView;
     private TextView nsfwTextView;
-    private ExoCreator mExoCreator;
 
     private boolean isNsfwMode = false;
     private String after = null;
@@ -97,8 +94,7 @@ public class ReelsActivity extends BaseActivity {
         sfwTextView = findViewById(R.id.sfw_text_view);
         nsfwTextView = findViewById(R.id.nsfw_text_view);
 
-        mExoCreator = new LoopAvailableExoCreator(this, mSharedPreferences, null);
-        adapter = new ReelsAdapter(this, mExoCreator);
+        adapter = new ReelsAdapter(this);
         viewPager.setAdapter(adapter);
 
         sfwTextView.setOnClickListener(v -> {
