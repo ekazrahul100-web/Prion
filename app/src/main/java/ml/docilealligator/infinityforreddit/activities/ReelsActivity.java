@@ -30,6 +30,7 @@ import ml.docilealligator.infinityforreddit.apis.RedditAPI;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
+import ml.docilealligator.infinityforreddit.postfilter.PostFilter;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
@@ -69,6 +70,7 @@ public class ReelsActivity extends BaseActivity {
     private TextView nsfwTextView;
 
     private boolean isNsfwMode = false;
+    @Nullable
     private String after = null;
     private boolean isLoading = false;
 
@@ -166,12 +168,14 @@ public class ReelsActivity extends BaseActivity {
         }
 
         String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
-        RedditAPI api = accountName.equals(Account.ANONYMOUS_ACCOUNT) ? mRetrofit.create(RedditAPI.class) : mOauthRetrofit.create(RedditAPI.class);
+        if (accountName == null) accountName = Account.ANONYMOUS_ACCOUNT;
+        RedditAPI api = Account.ANONYMOUS_ACCOUNT.equals(accountName) ? mRetrofit.create(RedditAPI.class) : mOauthRetrofit.create(RedditAPI.class);
         
+        final String finalAccountName = accountName;
         mExecutor.execute(() -> {
             try {
                 retrofit2.Response<String> response;
-                if (accountName.equals(Account.ANONYMOUS_ACCOUNT)) {
+                if (Account.ANONYMOUS_ACCOUNT.equals(finalAccountName)) {
                     response = api.getAnonymousFrontPageOrMultiredditPostsListenableFuture(subreddit, SortType.Type.HOT, null, after, 100, APIUtils.getUserAgent(this)).get();
                 } else {
                     String accessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
@@ -179,14 +183,16 @@ public class ReelsActivity extends BaseActivity {
                 }
                 
                 if (response != null && response.isSuccessful() && response.body() != null) {
-                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, null, NullReadPostsList.getInstance());
+                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, new PostFilter(), NullReadPostsList.getInstance());
                     after = ParsePost.getLastItem(response.body());
                     
                     List<Post> videos = new ArrayList<>();
-                    for (Post p : posts) {
-                        if (p.getPostType() == Post.VIDEO_TYPE || p.getPostType() == Post.GIF_TYPE) {
-                            if (isNsfwMode && !p.isNSFW()) continue;
-                            videos.add(p);
+                    if (posts != null) {
+                        for (Post p : posts) {
+                            if (p.getPostType() == Post.VIDEO_TYPE || p.getPostType() == Post.GIF_TYPE) {
+                                if (isNsfwMode && !p.isNSFW()) continue;
+                                videos.add(p);
+                            }
                         }
                     }
                     
