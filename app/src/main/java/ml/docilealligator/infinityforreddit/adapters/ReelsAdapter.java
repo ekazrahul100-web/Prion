@@ -20,6 +20,8 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
+import ml.docilealligator.infinityforreddit.utils.APIUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -97,6 +99,11 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.titleText.setText(post.getTitle());
         holder.subredditText.setText("r/" + post.getSubredditName());
         holder.scoreText.setText(String.valueOf(post.getScore()));
+        
+        holder.upvoteButton.setColorFilter(post.getVoteType() == APIUtils.DIR_UPVOTE ? ContextCompat.getColor(context, R.color.upvoted) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.downvoteButton.setColorFilter(post.getVoteType() == APIUtils.DIR_DOWNVOTE ? ContextCompat.getColor(context, R.color.downvoted) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.saveButton.setColorFilter(post.isSaved() ? ContextCompat.getColor(context, R.color.saved) : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+
 
         // We will manage playback separately when the page is selected
         holder.playerView.setPlayer(null);
@@ -196,12 +203,30 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
             upvoteButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onUpvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                    Post post = posts.get(getAdapterPosition());
+                    if (post.getVoteType() == APIUtils.DIR_UPVOTE) {
+                        post.setVoteType(0);
+                        post.setScore(post.getScore() - 1);
+                    } else {
+                        post.setScore(post.getScore() + (post.getVoteType() == APIUtils.DIR_DOWNVOTE ? 2 : 1));
+                        post.setVoteType(APIUtils.DIR_UPVOTE);
+                    }
+                    notifyItemChanged(getAdapterPosition());
+                    listener.onUpvote(post, getAdapterPosition());
                 }
             });
             downvoteButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onDownvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                    Post post = posts.get(getAdapterPosition());
+                    if (post.getVoteType() == APIUtils.DIR_DOWNVOTE) {
+                        post.setVoteType(0);
+                        post.setScore(post.getScore() + 1);
+                    } else {
+                        post.setScore(post.getScore() - (post.getVoteType() == APIUtils.DIR_UPVOTE ? 2 : 1));
+                        post.setVoteType(APIUtils.DIR_DOWNVOTE);
+                    }
+                    notifyItemChanged(getAdapterPosition());
+                    listener.onDownvote(post, getAdapterPosition());
                 }
             });
             commentsButton.setOnClickListener(v -> {
@@ -211,7 +236,10 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             });
             saveButton.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onSave(posts.get(getAdapterPosition()));
+                    Post post = posts.get(getAdapterPosition());
+                    post.setSaved(!post.isSaved());
+                    notifyItemChanged(getAdapterPosition());
+                    listener.onSave(post);
                 }
             });
             shareButton.setOnClickListener(v -> {
@@ -225,7 +253,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 public boolean onDoubleTap(MotionEvent e) {
                     showLikeAnimation();
                     if (getAdapterPosition() != RecyclerView.NO_POSITION) {
-                        listener.onUpvote(posts.get(getAdapterPosition()), getAdapterPosition());
+                        Post post = posts.get(getAdapterPosition());
+                        if (post.getVoteType() != APIUtils.DIR_UPVOTE) {
+                            post.setScore(post.getScore() + (post.getVoteType() == APIUtils.DIR_DOWNVOTE ? 2 : 1));
+                            post.setVoteType(APIUtils.DIR_UPVOTE);
+                            notifyItemChanged(getAdapterPosition());
+                            listener.onUpvote(post, getAdapterPosition());
+                        }
                     }
                     return true;
                 }

@@ -37,6 +37,11 @@ import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.thing.SaveThing;
 import ml.docilealligator.infinityforreddit.thing.VoteThing;
 import ml.docilealligator.infinityforreddit.readpost.NullReadPostsList;
+import androidx.appcompat.widget.SwitchCompat;
+import android.widget.ImageView;
+import ml.docilealligator.infinityforreddit.readpost.ReadPostsList;
+import ml.docilealligator.infinityforreddit.readpost.ReadPostsListInterface;
+
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -72,6 +77,8 @@ public class ReelsActivity extends BaseActivity {
     private ReelsAdapter nsfwAdapter;
     private TextView sfwTextView;
     private TextView nsfwTextView;
+    private SwitchCompat hideSeenToggle;
+    private ImageView refreshButton;
 
     private boolean isNsfwMode = false;
     @Nullable
@@ -123,6 +130,26 @@ public class ReelsActivity extends BaseActivity {
         viewPager = findViewById(R.id.view_pager_reels);
         sfwTextView = findViewById(R.id.sfw_text_view);
         nsfwTextView = findViewById(R.id.nsfw_text_view);
+        hideSeenToggle = findViewById(R.id.hide_seen_toggle);
+        refreshButton = findViewById(R.id.refresh_button);
+        
+        hideSeenToggle.setChecked(mSharedPreferences.getBoolean("hide_read_posts_in_reels", false));
+        hideSeenToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mSharedPreferences.edit().putBoolean("hide_read_posts_in_reels", isChecked).apply();
+        });
+        
+        refreshButton.setOnClickListener(v -> {
+            if (isNsfwMode) {
+                nsfwAdapter.clear();
+                nsfwAfter = null;
+                nsfwPosition = 0;
+            } else {
+                sfwAdapter.clear();
+                sfwAfter = null;
+                sfwPosition = 0;
+            }
+            fetchVideos();
+        });
 
         mAccountName = mSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
         mAccessToken = mSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
@@ -311,12 +338,17 @@ public class ReelsActivity extends BaseActivity {
                     filter.allowNSFW = true;
                     filter.containVideoType = true;
                     filter.containGifType = true;
-                    filter.containTextType = true;
-                    filter.containImageType = true;
-                    filter.containLinkType = true;
-                    filter.containGalleryType = true;
+                    filter.containTextType = false;
+                    filter.containImageType = false;
+                    filter.containLinkType = false;
+                    filter.containGalleryType = false;
                     
-                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, NullReadPostsList.getInstance());
+                    
+                    ReadPostsListInterface readList = NullReadPostsList.getInstance();
+                    if (mSharedPreferences.getBoolean("hide_read_posts_in_reels", false)) {
+                        readList = new ReadPostsList(ml.docilealligator.infinityforreddit.database.RedditDataRoomDatabase.getDatabase(ReelsActivity.this).readPostDao(), finalAccountName, false);
+                    }
+                    LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, readList);
                     String newAfter = ParsePost.getLastItem(response.body());
                     if (isNsfwMode) nsfwAfter = newAfter;
                     else sfwAfter = newAfter;
