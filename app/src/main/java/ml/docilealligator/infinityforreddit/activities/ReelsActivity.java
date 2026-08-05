@@ -32,6 +32,7 @@ import ml.docilealligator.infinityforreddit.post.ParsePost;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.postfilter.PostFilter;
 import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
+import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.thing.SortType;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.thing.SaveThing;
@@ -71,6 +72,9 @@ public class ReelsActivity extends BaseActivity {
 
     @Inject
     Executor mExecutor;
+
+    @Inject
+    RedditDataRoomDatabase mRedditDataRoomDatabase;
 
     private ViewPager2 viewPager;
     private ReelsAdapter sfwAdapter;
@@ -346,7 +350,7 @@ public class ReelsActivity extends BaseActivity {
                     
                     ReadPostsListInterface readList = NullReadPostsList.getInstance();
                     if (mSharedPreferences.getBoolean("hide_read_posts_in_reels", false)) {
-                        readList = new ReadPostsList(ml.docilealligator.infinityforreddit.RedditDataRoomDatabase.getDatabase(ReelsActivity.this).readPostDao(), finalAccountName, false);
+                        readList = new ReadPostsList(mRedditDataRoomDatabase.readPostDao(), finalAccountName, false);
                     }
                     LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, readList);
                     String newAfter = ParsePost.getLastItem(response.body());

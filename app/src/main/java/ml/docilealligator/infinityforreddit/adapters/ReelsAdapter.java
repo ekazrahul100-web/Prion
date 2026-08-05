@@ -100,9 +100,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.subredditText.setText("r/" + post.getSubredditName());
         holder.scoreText.setText(String.valueOf(post.getScore()));
         
-        holder.upvoteButton.setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? android.graphics.Color.parseColor("#FF8B60") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.downvoteButton.setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? android.graphics.Color.parseColor("#9494FF") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.saveButton.setColorFilter(post.isSaved() ? android.graphics.Color.parseColor("#FFEB3B") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        ((android.widget.ImageView) holder.upvoteButton).setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_UPVOTE) ? android.graphics.Color.parseColor("#FF8B60") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        ((android.widget.ImageView) holder.downvoteButton).setColorFilter(String.valueOf(post.getVoteType()).equals(APIUtils.DIR_DOWNVOTE) ? android.graphics.Color.parseColor("#9494FF") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
+        ((android.widget.ImageView) holder.saveButton).setColorFilter(post.isSaved() ? android.graphics.Color.parseColor("#FFEB3B") : ContextCompat.getColor(context, android.R.color.white), android.graphics.PorterDuff.Mode.SRC_IN);
 
 
         // We will manage playback separately when the page is selected
