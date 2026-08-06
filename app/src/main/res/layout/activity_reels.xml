@@ -16,6 +16,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <ProgressBar
+        android:id="@+id/reels_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,55 +37,31 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
+            android:id="@+id/mode_selector_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp">
 
             <TextView
-                android:id="@+id/sfw_text_view"
+                android:id="@+id/current_mode_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="SFW"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:padding="8dp" />
+                android:textColor="@android:color/white" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=" | "
-                android:textSize="18sp"
-                android:textColor="@android:color/white"
-                android:padding="8dp" />
-
-            <TextView
-                android:id="@+id/subscribed_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Subscribed"
-                android:textSize="18sp"
-                android:textColor="#88ffffff"
-                android:padding="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=" | "
-                android:textSize="18sp"
-                android:textColor="@android:color/white"
-                android:padding="8dp" />
-
-            <TextView
-                android:id="@+id/nsfw_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="NSFW"
-                android:textSize="18sp"
-                android:textColor="#88ffffff"
-                android:padding="8dp" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_arrow_drop_down_24dp"
+                app:tint="@android:color/white" />
         </LinearLayout>
 
         <LinearLayout

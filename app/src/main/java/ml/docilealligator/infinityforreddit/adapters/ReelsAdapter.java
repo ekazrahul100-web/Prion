@@ -9,6 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.SeekBar;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,6 +62,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
     private int currentPlayingPosition = -1;
     private final Map<Integer, ExoPlayer> players = new HashMap<>();
+    private boolean isMuted = false;
 
     public void addPosts(List<Post> newPosts) {
         int start = posts.size();
@@ -112,6 +116,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         // Attach the player if it exists for this position
         ExoPlayer existingPlayer = players.get(position);
         holder.playerView.setPlayer(existingPlayer);
+        
+        holder.pauseIndicator.setVisibility(View.GONE);
+        holder.muteButton.setImageResource(isMuted ? R.drawable.ic_volume_off_24dp : R.drawable.ic_volume_up_24dp);
     }
 
     private void updateVoteUI(ReelViewHolder holder, Post post) {
@@ -129,6 +136,18 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     public void onViewRecycled(@NonNull ReelViewHolder holder) {
         super.onViewRecycled(holder);
         holder.playerView.setPlayer(null);
+    }
+
+    @Override
+    public void onViewAttachedToWindow(@NonNull ReelViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        holder.startUpdatingProgress();
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull ReelViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.stopUpdatingProgress();
     }
 
     @Override
@@ -183,12 +202,14 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
                     player.setMediaSource(mediaSource);
                     player.prepare();
+                    player.setVolume(isMuted ? 0f : 1f);
                     player.setPlayWhenReady(i == position);
                     players.put(i, player);
                     notifyItemChanged(i);
                 } else {
                     ExoPlayer p = players.get(i);
                     if (p != null) {
+                        p.setVolume(isMuted ? 0f : 1f);
                         p.setPlayWhenReady(i == position);
                     }
                 }
@@ -207,8 +228,38 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         ImageView commentsButton;
         ImageView saveButton;
         ImageView shareButton;
+        ImageView pauseIndicator;
+        ImageView muteButton;
+        SeekBar seekBar;
 
         private GestureDetector gestureDetector;
+        private final Handler uiHandler = new Handler(Looper.getMainLooper());
+        private final Runnable updateProgressAction = new Runnable() {
+            @Override
+            public void run() {
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    ExoPlayer player = players.get(pos);
+                    if (player != null && player.isPlaying()) {
+                        long duration = player.getDuration();
+                        if (duration > 0) {
+                            seekBar.setMax((int) duration);
+                            seekBar.setProgress((int) player.getCurrentPosition());
+                        }
+                    }
+                }
+                uiHandler.postDelayed(this, 100);
+            }
+        };
+
+        public void startUpdatingProgress() {
+            uiHandler.removeCallbacks(updateProgressAction);
+            uiHandler.post(updateProgressAction);
+        }
+
+        public void stopUpdatingProgress() {
+            uiHandler.removeCallbacks(updateProgressAction);
+        }
 
         public ReelViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -223,6 +274,34 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             commentsButton = itemView.findViewById(R.id.comments_button);
             saveButton = itemView.findViewById(R.id.save_button);
             shareButton = itemView.findViewById(R.id.share_button);
+            pauseIndicator = itemView.findViewById(R.id.pause_indicator);
+            muteButton = itemView.findViewById(R.id.mute_button);
+            seekBar = itemView.findViewById(R.id.seek_bar);
+
+            muteButton.setOnClickListener(v -> {
+                isMuted = !isMuted;
+                for (ExoPlayer p : players.values()) {
+                    if (p != null) p.setVolume(isMuted ? 0f : 1f);
+                }
+                muteButton.setImageResource(isMuted ? R.drawable.ic_volume_off_24dp : R.drawable.ic_volume_up_24dp);
+            });
+
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (fromUser) {
+                        int pos = getBindingAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            ExoPlayer player = players.get(pos);
+                            if (player != null) {
+                                player.seekTo(progress);
+                            }
+                        }
+                    }
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
 
             // Set up click listeners ONCE in the constructor, not in onBind
             upvoteButton.setOnClickListener(v -> {
@@ -306,8 +385,10 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     if (player != null && pos == currentPlayingPosition) {
                         if (player.isPlaying()) {
                             player.pause();
+                            pauseIndicator.setVisibility(View.VISIBLE);
                         } else {
                             player.play();
+                            pauseIndicator.setVisibility(View.GONE);
                         }
                     }
                     return true;

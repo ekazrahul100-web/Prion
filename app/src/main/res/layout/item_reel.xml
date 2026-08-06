@@ -29,6 +29,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <ImageView
+        android:id="@+id/pause_indicator"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@drawable/ic_play_arrow_24dp"
+        app:tint="#88FFFFFF"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
         android:id="@+id/actions_container"
         android:layout_width="wrap_content"
@@ -130,5 +142,29 @@
             android:layout_marginTop="4dp" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/mute_button"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="4dp"
+        android:src="@drawable/ic_volume_up_24dp"
+        app:tint="@android:color/white"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toTopOf="@id/actions_container"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <SeekBar
+        android:id="@+id/seek_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

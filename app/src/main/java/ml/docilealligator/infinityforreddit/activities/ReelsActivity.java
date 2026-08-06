@@ -6,6 +6,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.ProgressBar;
+import android.widget.PopupMenu;
+import android.view.MenuItem;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -79,12 +83,13 @@ public class ReelsActivity extends BaseActivity {
     RedditDataRoomDatabase mRedditDataRoomDatabase;
 
     private ViewPager2 viewPager;
+    private ProgressBar progressBar;
+    private LinearLayout modeSelectorContainer;
+    private TextView currentModeTextView;
     private ReelsAdapter sfwAdapter;
     private ReelsAdapter nsfwAdapter;
     private ReelsAdapter subscribedAdapter;
-    private TextView sfwTextView;
-    private TextView nsfwTextView;
-    private TextView subscribedTextView;
+    
     private SwitchCompat hideSeenToggle;
     private ImageView refreshButton;
 
@@ -104,6 +109,7 @@ public class ReelsActivity extends BaseActivity {
     private int nsfwPosition = 0;
     private int subscribedPosition = 0;
     private boolean isLoading = false;
+                        progressBar.setVisibility(View.GONE);
     
     @Nullable
     private String mAccountName;
@@ -144,9 +150,10 @@ public class ReelsActivity extends BaseActivity {
         setContentView(R.layout.activity_reels);
 
         viewPager = findViewById(R.id.view_pager_reels);
-        sfwTextView = findViewById(R.id.sfw_text_view);
-        nsfwTextView = findViewById(R.id.nsfw_text_view);
-        subscribedTextView = findViewById(R.id.subscribed_text_view);
+        progressBar = findViewById(R.id.reels_progress_bar);
+        modeSelectorContainer = findViewById(R.id.mode_selector_container);
+        currentModeTextView = findViewById(R.id.current_mode_text_view);
+        
         hideSeenToggle = findViewById(R.id.hide_seen_toggle);
         refreshButton = findViewById(R.id.refresh_button);
         
@@ -239,52 +246,33 @@ public class ReelsActivity extends BaseActivity {
         viewPager.setAdapter(sfwAdapter);
         viewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
 
-        sfwTextView.setOnClickListener(v -> {
-            if (currentMode != MODE_SFW) {
-                ReelsAdapter oldAdapter = currentMode == MODE_NSFW ? nsfwAdapter : subscribedAdapter;
-                oldAdapter.releasePlayers();
-                currentMode = MODE_SFW;
-                updateModeUI();
-                viewPager.setAdapter(sfwAdapter);
-                viewPager.setCurrentItem(sfwPosition, false);
-                if (sfwAdapter.getItemCount() == 0) {
-                    fetchVideos();
-                } else {
-                    sfwAdapter.playVideoAt(sfwPosition);
+                modeSelectorContainer.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(ReelsActivity.this, modeSelectorContainer);
+            popup.getMenu().add(0, MODE_SFW, 0, "SFW");
+            popup.getMenu().add(0, MODE_SUBSCRIBED, 1, "Subscribed");
+            popup.getMenu().add(0, MODE_NSFW, 2, "NSFW");
+            popup.setOnMenuItemClickListener(item -> {
+                int newMode = item.getItemId();
+                if (currentMode != newMode) {
+                    ReelsAdapter oldAdapter = currentMode == MODE_NSFW ? nsfwAdapter : (currentMode == MODE_SUBSCRIBED ? subscribedAdapter : sfwAdapter);
+                    oldAdapter.releasePlayers();
+                    currentMode = newMode;
+                    updateModeUI();
+                    
+                    ReelsAdapter newAdapter = currentMode == MODE_NSFW ? nsfwAdapter : (currentMode == MODE_SUBSCRIBED ? subscribedAdapter : sfwAdapter);
+                    int newPosition = currentMode == MODE_NSFW ? nsfwPosition : (currentMode == MODE_SUBSCRIBED ? subscribedPosition : sfwPosition);
+                    
+                    viewPager.setAdapter(newAdapter);
+                    viewPager.setCurrentItem(newPosition, false);
+                    if (newAdapter.getItemCount() == 0) {
+                        fetchVideos();
+                    } else {
+                        newAdapter.playVideoAt(newPosition);
+                    }
                 }
-            }
-        });
-
-        nsfwTextView.setOnClickListener(v -> {
-            if (currentMode != MODE_NSFW) {
-                ReelsAdapter oldAdapter = currentMode == MODE_SFW ? sfwAdapter : subscribedAdapter;
-                oldAdapter.releasePlayers();
-                currentMode = MODE_NSFW;
-                updateModeUI();
-                viewPager.setAdapter(nsfwAdapter);
-                viewPager.setCurrentItem(nsfwPosition, false);
-                if (nsfwAdapter.getItemCount() == 0) {
-                    fetchVideos();
-                } else {
-                    nsfwAdapter.playVideoAt(nsfwPosition);
-                }
-            }
-        });
-        
-        subscribedTextView.setOnClickListener(v -> {
-            if (currentMode != MODE_SUBSCRIBED) {
-                ReelsAdapter oldAdapter = currentMode == MODE_NSFW ? nsfwAdapter : sfwAdapter;
-                oldAdapter.releasePlayers();
-                currentMode = MODE_SUBSCRIBED;
-                updateModeUI();
-                viewPager.setAdapter(subscribedAdapter);
-                viewPager.setCurrentItem(subscribedPosition, false);
-                if (subscribedAdapter.getItemCount() == 0) {
-                    fetchVideos();
-                } else {
-                    subscribedAdapter.playVideoAt(subscribedPosition);
-                }
-            }
+                return true;
+            });
+            popup.show();
         });
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -338,18 +326,15 @@ public class ReelsActivity extends BaseActivity {
         fetchVideos();
     }
 
-    private void updateModeUI() {
-        sfwTextView.setTextColor(0x88ffffff);
-        sfwTextView.setTypeface(null, android.graphics.Typeface.NORMAL);
-        nsfwTextView.setTextColor(0x88ffffff);
-        nsfwTextView.setTypeface(null, android.graphics.Typeface.NORMAL);
-        subscribedTextView.setTextColor(0x88ffffff);
-        subscribedTextView.setTypeface(null, android.graphics.Typeface.NORMAL);
-
+        private void updateModeUI() {
         if (currentMode == MODE_NSFW) {
-            nsfwTextView.setTextColor(0xffffffff);
-            nsfwTextView.setTypeface(null, android.graphics.Typeface.BOLD);
+            currentModeTextView.setText("NSFW");
         } else if (currentMode == MODE_SUBSCRIBED) {
+            currentModeTextView.setText("Subscribed");
+        } else {
+            currentModeTextView.setText("SFW");
+        }
+    } else if (currentMode == MODE_SUBSCRIBED) {
             subscribedTextView.setTextColor(0xffffffff);
             subscribedTextView.setTypeface(null, android.graphics.Typeface.BOLD);
         } else {
@@ -360,6 +345,7 @@ public class ReelsActivity extends BaseActivity {
 
         private void fetchVideos() {
         isLoading = true;
+        new Handler(Looper.getMainLooper()).post(() -> progressBar.setVisibility(View.VISIBLE));
         
         final boolean fetchSubscribed = (currentMode == MODE_SUBSCRIBED);
         String subreddit;
@@ -450,6 +436,7 @@ public class ReelsActivity extends BaseActivity {
                         ReelsAdapter currentAdapter = currentMode == MODE_NSFW ? nsfwAdapter : (currentMode == MODE_SUBSCRIBED ? subscribedAdapter : sfwAdapter);
                         currentAdapter.addPosts(videos);
                         isLoading = false;
+                        progressBar.setVisibility(View.GONE);
                         if (videos.isEmpty() && newAfter != null) {
                             fetchVideos(); // Fetch more if none were videos
                         } else if (currentAdapter.getItemCount() == videos.size() && videos.size() > 0) {
@@ -457,11 +444,17 @@ public class ReelsActivity extends BaseActivity {
                         }
                     });
                 } else {
-                    new Handler(Looper.getMainLooper()).post(() -> isLoading = false);
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        isLoading = false;
+                        progressBar.setVisibility(View.GONE);
+                    });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                new Handler(Looper.getMainLooper()).post(() -> isLoading = false);
+                new Handler(Looper.getMainLooper()).post(() -> {
+                        isLoading = false;
+                        progressBar.setVisibility(View.GONE);
+                    });
             }
         });
     }
