@@ -118,7 +118,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.playerView.setPlayer(existingPlayer);
         
         holder.pauseIndicator.setVisibility(View.GONE);
-        holder.muteButton.setImageResource(isMuted ? R.drawable.ic_volume_off_24dp : R.drawable.ic_volume_up_24dp);
+        holder.muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
     }
 
     private void updateVoteUI(ReelViewHolder holder, Post post) {
@@ -283,7 +283,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 for (ExoPlayer p : players.values()) {
                     if (p != null) p.setVolume(isMuted ? 0f : 1f);
                 }
-                muteButton.setImageResource(isMuted ? R.drawable.ic_volume_off_24dp : R.drawable.ic_volume_up_24dp);
+                muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
             });
 
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
