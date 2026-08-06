@@ -420,7 +420,11 @@ public class ReelsActivity extends BaseActivity {
                                 // Enforce NSFW-only when in NSFW mode
                                 if (currentMode == MODE_NSFW && !p.isNSFW()) continue;
                                 if (currentMode == MODE_SFW && p.isNSFW()) continue;
-                                if (currentMode == MODE_SUBSCRIBED && p.isNSFW() && !mSharedPreferences.getBoolean(SharedPreferencesUtils.NSFW_BASE, false)) continue;
+                                if (currentMode == MODE_SUBSCRIBED && p.isNSFW()) {
+                                    SharedPreferences nsfwPrefs = getSharedPreferences(SharedPreferencesUtils.NSFW_AND_SPOILER_SHARED_PREFERENCES_FILE, MODE_PRIVATE);
+                                    boolean nsfwAllowed = nsfwPrefs.getBoolean(finalAccountName + SharedPreferencesUtils.NSFW_BASE, false);
+                                    if (!nsfwAllowed) continue;
+                                }
                                 
                                 // Filter out seen posts if toggle is on (uses reels namespace)
                                 if (hideSeenEnabled) {
