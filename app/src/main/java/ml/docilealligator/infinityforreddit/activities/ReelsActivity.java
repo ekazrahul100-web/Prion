@@ -54,6 +54,7 @@ import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.utils.SeenPostsManager;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
+import androidx.media3.ui.AspectRatioFrameLayout;
 import retrofit2.Retrofit;
 
 public class ReelsActivity extends BaseActivity {
@@ -62,13 +63,13 @@ public class ReelsActivity extends BaseActivity {
     /** Optional: pass a subreddit name to lock Reels to that subreddit only. */
     public static final String EXTRA_SUBREDDIT_NAME = "reels_subreddit_name";
 
-    // ── SharedPreferences keys ────────────────────────────────────────────
-    private static final String REELS_NAMESPACE       = "reels";
-    private static final String PREF_HIDE_SEEN_REELS  = "hide_seen_posts_in_reels";
-    private static final String PREF_AUTO_ROTATE      = "reels_auto_rotate";
+    // ── SharedPreferences keys (delegated to ReelsSettingsActivity) ─────
+    private static final String PREF_HIDE_SEEN_REELS = ReelsSettingsActivity.PREF_HIDE_SEEN_REELS;
+    private static final String REELS_NAMESPACE = "reels";
 
     // ── Dwell time to mark a video as "seen" (ms) ────────────────────────
     private static final int DWELL_TIME_MS = 5000;
+
 
     // ── Modes ─────────────────────────────────────────────────────────────
     private static final int MODE_SFW        = 0;
@@ -132,7 +133,12 @@ public class ReelsActivity extends BaseActivity {
     /** If non-null, Reels is locked to this single subreddit (subreddit immersive mode). */
     @Nullable private String lockedSubreddit = null;
 
-    private boolean autoRotateEnabled = true;
+    /** Current landscape mode — one of ReelsSettingsActivity.LANDSCAPE_* constants. */
+    private int landscapeMode = ReelsSettingsActivity.LANDSCAPE_AUTOROTATE;
+    /** Whether HD quality is preferred (affects track selector cap). */
+    private boolean preferHd = true;
+    /** Whether to auto-advance to the next video when current ends. */
+    private boolean autoAdvance = false;
 
     // ── Dwell tracking ────────────────────────────────────────────────────
     private final Handler dwellHandler = new Handler(Looper.getMainLooper());
@@ -183,8 +189,8 @@ public class ReelsActivity extends BaseActivity {
         refreshButton           = findViewById(R.id.refresh_button);
         reelsSettingsButton     = findViewById(R.id.reels_settings_button);
 
-        // Read settings
-        autoRotateEnabled = mSharedPreferences.getBoolean(PREF_AUTO_ROTATE, true);
+        // Read settings from ReelsSettingsActivity prefs
+        applySettingsFromPrefs();
 
         // Subreddit-locked mode from Intent
         lockedSubreddit = getIntent().getStringExtra(EXTRA_SUBREDDIT_NAME);
@@ -205,11 +211,9 @@ public class ReelsActivity extends BaseActivity {
             fetchVideos();
         });
 
-        // Settings button → placeholder toast until ReelsSettingsActivity exists
-        reelsSettingsButton.setOnClickListener(v -> {
-            // TODO: startActivity(new Intent(this, ReelsSettingsActivity.class));
-            Toast.makeText(this, "Reels Settings (coming soon)", Toast.LENGTH_SHORT).show();
-        });
+        // Settings button → ReelsSettingsActivity
+        reelsSettingsButton.setOnClickListener(v ->
+                startActivity(new Intent(this, ReelsSettingsActivity.class)));
 
         // Build the shared InteractionListener
         ReelsAdapter.InteractionListener listener = buildInteractionListener();
@@ -240,8 +244,11 @@ public class ReelsActivity extends BaseActivity {
 
                 currentAdapter.playVideoAt(position);
 
-                // Auto-detect landscape and rotate if enabled
-                if (autoRotateEnabled) detectAndRotate(currentAdapter, position);
+                // Apply landscape mode for current video
+                detectAndApplyLandscapeMode(currentAdapter, position);
+
+                // Auto-advance: attach listener to jump when video ends
+                if (autoAdvance) attachAutoAdvanceListener(currentAdapter, position);
 
                 if (position >= currentAdapter.getItemCount() - 5 && !isLoading) {
                     fetchVideos();
@@ -266,57 +273,113 @@ public class ReelsActivity extends BaseActivity {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Auto-rotate (seamless)
+    // Settings helpers
     // ─────────────────────────────────────────────────────────────────────
 
+    private void applySettingsFromPrefs() {
+        landscapeMode = mSharedPreferences.getInt(
+                ReelsSettingsActivity.PREF_LANDSCAPE_MODE,
+                ReelsSettingsActivity.LANDSCAPE_AUTOROTATE);
+        preferHd    = mSharedPreferences.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
+        autoAdvance = mSharedPreferences.getBoolean(ReelsSettingsActivity.PREF_AUTO_ADVANCE, false);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Re-read settings in case the user changed them in ReelsSettingsActivity
+        applySettingsFromPrefs();
+        // Re-apply landscape mode to the currently visible video
+        ReelsAdapter currentAdapter = getCurrentAdapter();
+        int pos = getCurrentPosition();
+        if (currentAdapter.getItemCount() > 0) {
+            detectAndApplyLandscapeMode(currentAdapter, pos);
+        }
+    }
+
+
+
     /**
-     * Attaches a one-shot VideoSize listener to the player at [position] and
-     * rotates the activity (without animation) if the video is landscape.
-     * Does nothing if autoRotateEnabled is false.
+     * Called whenever a new video page is shown. Applies the user's chosen
+     * landscape mode: Default (nothing), Autorotate (seamless rotation),
+     * or Fill (zoom-crop in portrait).
      */
-    private void detectAndRotate(ReelsAdapter adapter, int position) {
-        // Use a small delay so the player has a chance to be ready
+    private void detectAndApplyLandscapeMode(ReelsAdapter adapter, int position) {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             Post post = adapter.getPostAt(position);
             if (post == null) return;
 
-            // Read dimensions from the first Preview entry (available even before playback)
             int width = 0, height = 0;
             java.util.ArrayList<Post.Preview> previews = post.getPreviews();
             if (previews != null && !previews.isEmpty()) {
                 width  = previews.get(0).getPreviewWidth();
                 height = previews.get(0).getPreviewHeight();
             }
+            boolean isLandscapeVideo = (width > 0 && height > 0 && width > height);
 
-            boolean isLandscape = (width > 0 && height > 0 && width > height);
-            rotateToOrientation(isLandscape);
-        }, 400);
+            switch (landscapeMode) {
+                case ReelsSettingsActivity.LANDSCAPE_AUTOROTATE:
+                    // Reset fill mode on adapter (use fit, not zoom)
+                    adapter.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT, position);
+                    if (isLandscapeVideo) {
+                        rotateToOrientation(true);
+                    } else {
+                        rotateToOrientation(false);
+                    }
+                    break;
+
+                case ReelsSettingsActivity.LANDSCAPE_FILLIN:
+                    // Stay portrait; zoom-crop to fill the screen
+                    rotateToOrientation(false);
+                    adapter.setResizeMode(
+                            isLandscapeVideo
+                                    ? AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                    : AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH,
+                            position);
+                    break;
+
+                case ReelsSettingsActivity.LANDSCAPE_DEFAULT:
+                default:
+                    // Portrait, no changes — video shows with black bars
+                    rotateToOrientation(false);
+                    adapter.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH, position);
+                    break;
+            }
+        }, 350);
     }
 
     /**
      * Rotates the screen instantly (no animation) to the given orientation.
-     * Uses WindowManager flags to suppress the system animation.
      */
     private void rotateToOrientation(boolean landscape) {
         int target = landscape
                 ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 
-        // Only rotate if not already in the right orientation
         int currentOrientation = getResources().getConfiguration().orientation;
         boolean alreadyLandscape = (currentOrientation == Configuration.ORIENTATION_LANDSCAPE);
         if (landscape == alreadyLandscape) return;
 
-        // Suppress transition animation
+        // Suppress rotation animation
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         overridePendingTransition(0, 0);
         setRequestedOrientation(target);
-
-        // Re-enable touch after a short delay
         new Handler(Looper.getMainLooper()).postDelayed(() ->
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE), 400);
+    }
+
+    /**
+     * Attach an auto-advance listener: when the video at [position] ends,
+     * smoothly scroll to the next page.
+     */
+    private void attachAutoAdvanceListener(ReelsAdapter adapter, int position) {
+        adapter.setAutoAdvanceListener(position, () -> {
+            if (position + 1 < adapter.getItemCount()) {
+                viewPager.setCurrentItem(position + 1, true);
+            }
+        });
     }
 
     // ─────────────────────────────────────────────────────────────────────

@@ -122,6 +122,7 @@ public interface AppComponent {
 
     void inject(MainActivity mainActivity);
     void inject(ml.docilealligator.infinityforreddit.activities.ReelsActivity reelsActivity);
+    void inject(ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity reelsSettingsActivity);
 
     void inject(LoginActivity loginActivity);
 

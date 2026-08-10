@@ -68,17 +68,35 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     private final Map<Integer, ExoPlayer> players = new HashMap<>();
     private boolean isMuted = false;
 
-    // Whether to use RESIZE_MODE_ZOOM (fill) for landscape videos.
-    // When false (default) videos just play with black bars — no cropping.
-    private boolean fillLandscapeVideos = false;
+    /** Per-position resize mode (AspectRatioFrameLayout.RESIZE_MODE_*). Default: FIXED_WIDTH. */
+    private final Map<Integer, Integer> resizeModes = new HashMap<>();
+    /** Per-position auto-advance callbacks (called when video ends). */
+    private final Map<Integer, Runnable> autoAdvanceListeners = new HashMap<>();
 
     public ReelsAdapter(Context context, InteractionListener listener) {
         this.context = context;
         this.listener = listener;
     }
 
-    public void setFillLandscapeVideos(boolean fill) {
-        this.fillLandscapeVideos = fill;
+    /**
+     * Apply a resize mode to the PlayerView at [position] immediately.
+     * The mode is stored so it survives rebinds.
+     */
+    public void setResizeMode(int resizeMode, int position) {
+        resizeModes.put(position, resizeMode);
+        notifyItemChanged(position);
+    }
+
+    /**
+     * Register a callback that fires when the video at [position] finishes playing.
+     * Used for auto-advance.
+     */
+    public void setAutoAdvanceListener(int position, @Nullable Runnable callback) {
+        if (callback == null) {
+            autoAdvanceListeners.remove(position);
+        } else {
+            autoAdvanceListeners.put(position, callback);
+        }
     }
 
     public void addPosts(List<Post> newPosts) {
@@ -132,9 +150,32 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         ExoPlayer existingPlayer = players.get(position);
         holder.playerView.setPlayer(existingPlayer);
 
+        // Apply stored resize mode (set by ReelsActivity based on landscape mode setting)
+        int resizeMode = resizeModes.containsKey(position)
+                ? resizeModes.get(position)
+                : AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH;
+        holder.playerView.setResizeModeRaw(resizeMode);
+
+        // Attach auto-advance listener if present
+        if (existingPlayer != null) {
+            Runnable advanceCallback = autoAdvanceListeners.get(position);
+            if (advanceCallback != null) {
+                existingPlayer.addListener(new Player.Listener() {
+                    @Override
+                    public void onPlaybackStateChanged(int state) {
+                        if (state == Player.STATE_ENDED) {
+                            existingPlayer.removeListener(this);
+                            advanceCallback.run();
+                        }
+                    }
+                });
+            }
+        }
+
         holder.pauseIndicator.setVisibility(View.GONE);
         holder.muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
     }
+
 
     private void updateVoteUI(ReelViewHolder holder, Post post) {
         int voteType = post.getVoteType();

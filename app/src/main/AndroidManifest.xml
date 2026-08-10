@@ -50,6 +50,10 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".activities.ReelsSettingsActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+        <activity
             android:name=".activities.CopyMultiRedditActivity"
             android:exported="false"
             android:parentActivityName=".activities.MainActivity"
