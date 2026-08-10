@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.ProgressBar;
 import android.widget.PopupMenu;
-import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -89,11 +88,10 @@ public class ReelsActivity extends BaseActivity {
     private ReelsAdapter sfwAdapter;
     private ReelsAdapter nsfwAdapter;
     private ReelsAdapter subscribedAdapter;
-    
+
     private SwitchCompat hideSeenToggle;
     private ImageView refreshButton;
 
-    
     private static final int MODE_SFW = 0;
     private static final int MODE_SUBSCRIBED = 1;
     private static final int MODE_NSFW = 2;
@@ -109,8 +107,7 @@ public class ReelsActivity extends BaseActivity {
     private int nsfwPosition = 0;
     private int subscribedPosition = 0;
     private boolean isLoading = false;
-                        progressBar.setVisibility(View.GONE);
-    
+
     @Nullable
     private String mAccountName;
     @Nullable
@@ -153,16 +150,16 @@ public class ReelsActivity extends BaseActivity {
         progressBar = findViewById(R.id.reels_progress_bar);
         modeSelectorContainer = findViewById(R.id.mode_selector_container);
         currentModeTextView = findViewById(R.id.current_mode_text_view);
-        
+
         hideSeenToggle = findViewById(R.id.hide_seen_toggle);
         refreshButton = findViewById(R.id.refresh_button);
-        
+
         // Toggle uses the same key that the filter checks
         hideSeenToggle.setChecked(mSharedPreferences.getBoolean(PREF_HIDE_SEEN_REELS, false));
         hideSeenToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
             mSharedPreferences.edit().putBoolean(PREF_HIDE_SEEN_REELS, isChecked).apply();
         });
-        
+
         refreshButton.setOnClickListener(v -> {
             if (currentMode == MODE_NSFW) {
                 nsfwAdapter.clear();
@@ -242,11 +239,11 @@ public class ReelsActivity extends BaseActivity {
         sfwAdapter = new ReelsAdapter(this, listener);
         nsfwAdapter = new ReelsAdapter(this, listener);
         subscribedAdapter = new ReelsAdapter(this, listener);
-        
+
         viewPager.setAdapter(sfwAdapter);
         viewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
 
-                modeSelectorContainer.setOnClickListener(v -> {
+        modeSelectorContainer.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(ReelsActivity.this, modeSelectorContainer);
             popup.getMenu().add(0, MODE_SFW, 0, "SFW");
             popup.getMenu().add(0, MODE_SUBSCRIBED, 1, "Subscribed");
@@ -258,10 +255,10 @@ public class ReelsActivity extends BaseActivity {
                     oldAdapter.releasePlayers();
                     currentMode = newMode;
                     updateModeUI();
-                    
+
                     ReelsAdapter newAdapter = currentMode == MODE_NSFW ? nsfwAdapter : (currentMode == MODE_SUBSCRIBED ? subscribedAdapter : sfwAdapter);
                     int newPosition = currentMode == MODE_NSFW ? nsfwPosition : (currentMode == MODE_SUBSCRIBED ? subscribedPosition : sfwPosition);
-                    
+
                     viewPager.setAdapter(newAdapter);
                     viewPager.setCurrentItem(newPosition, false);
                     if (newAdapter.getItemCount() == 0) {
@@ -281,7 +278,6 @@ public class ReelsActivity extends BaseActivity {
                 super.onPageSelected(position);
                 ReelsAdapter currentAdapter;
                 if (currentMode == MODE_NSFW) {
-                    nsfwAdapter = nsfwAdapter;
                     currentAdapter = nsfwAdapter;
                     nsfwPosition = position;
                 } else if (currentMode == MODE_SUBSCRIBED) {
@@ -326,7 +322,7 @@ public class ReelsActivity extends BaseActivity {
         fetchVideos();
     }
 
-        private void updateModeUI() {
+    private void updateModeUI() {
         if (currentMode == MODE_NSFW) {
             currentModeTextView.setText("NSFW");
         } else if (currentMode == MODE_SUBSCRIBED) {
@@ -334,19 +330,12 @@ public class ReelsActivity extends BaseActivity {
         } else {
             currentModeTextView.setText("SFW");
         }
-    } else if (currentMode == MODE_SUBSCRIBED) {
-            subscribedTextView.setTextColor(0xffffffff);
-            subscribedTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-        } else {
-            sfwTextView.setTextColor(0xffffffff);
-            sfwTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-        }
     }
 
-        private void fetchVideos() {
+    private void fetchVideos() {
         isLoading = true;
         new Handler(Looper.getMainLooper()).post(() -> progressBar.setVisibility(View.VISIBLE));
-        
+
         final boolean fetchSubscribed = (currentMode == MODE_SUBSCRIBED);
         String subreddit;
         List<String> pool = new ArrayList<>();
@@ -366,17 +355,17 @@ public class ReelsActivity extends BaseActivity {
         } else {
             subreddit = "popular"; // Fallback for anonymous
         }
-        
+
         String currentAfter = currentMode == MODE_NSFW ? nsfwAfter : (currentMode == MODE_SUBSCRIBED ? subscribedAfter : sfwAfter);
 
         String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, Account.ANONYMOUS_ACCOUNT);
         if (accountName == null) accountName = Account.ANONYMOUS_ACCOUNT;
         RedditAPI api = Account.ANONYMOUS_ACCOUNT.equals(accountName) ? mRetrofit.create(RedditAPI.class) : mOauthRetrofit.create(RedditAPI.class);
-        
+
         final String finalAccountName = accountName;
         final boolean hideSeenEnabled = mSharedPreferences.getBoolean(PREF_HIDE_SEEN_REELS, false);
         final String finalSubreddit = subreddit;
-        
+
         mExecutor.execute(() -> {
             try {
                 retrofit2.Response<String> response;
@@ -395,7 +384,7 @@ public class ReelsActivity extends BaseActivity {
                         response = api.getSubredditBestPostsOauthListenableFuture(finalSubreddit, SortType.Type.HOT, null, currentAfter, 100, APIUtils.getOAuthHeader(accessToken)).get();
                     }
                 }
-                
+
                 if (response != null && response.isSuccessful() && response.body() != null) {
                     PostFilter filter = new PostFilter();
                     filter.allowNSFW = true;
@@ -405,14 +394,14 @@ public class ReelsActivity extends BaseActivity {
                     filter.containImageType = false;
                     filter.containLinkType = false;
                     filter.containGalleryType = false;
-                    
+
                     ReadPostsListInterface readList = NullReadPostsList.getInstance();
                     LinkedHashSet<Post> posts = ParsePost.parsePostsSync(response.body(), -1, filter, readList);
                     String newAfter = ParsePost.getLastItem(response.body());
                     if (currentMode == MODE_NSFW) nsfwAfter = newAfter;
                     else if (currentMode == MODE_SUBSCRIBED) subscribedAfter = newAfter;
                     else sfwAfter = newAfter;
-                    
+
                     List<Post> videos = new ArrayList<>();
                     if (posts != null) {
                         for (Post p : posts) {
@@ -425,17 +414,17 @@ public class ReelsActivity extends BaseActivity {
                                     boolean nsfwAllowed = nsfwPrefs.getBoolean(finalAccountName + SharedPreferencesUtils.NSFW_BASE, false);
                                     if (!nsfwAllowed) continue;
                                 }
-                                
+
                                 // Filter out seen posts if toggle is on (uses reels namespace)
                                 if (hideSeenEnabled) {
                                     if (SeenPostsManager.hasSeen(mSharedPreferences, p.getId(), REELS_NAMESPACE)) continue;
                                 }
-                                
+
                                 videos.add(p);
                             }
                         }
                     }
-                    
+
                     new Handler(Looper.getMainLooper()).post(() -> {
                         ReelsAdapter currentAdapter = currentMode == MODE_NSFW ? nsfwAdapter : (currentMode == MODE_SUBSCRIBED ? subscribedAdapter : sfwAdapter);
                         currentAdapter.addPosts(videos);
@@ -456,9 +445,9 @@ public class ReelsActivity extends BaseActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 new Handler(Looper.getMainLooper()).post(() -> {
-                        isLoading = false;
-                        progressBar.setVisibility(View.GONE);
-                    });
+                    isLoading = false;
+                    progressBar.setVisibility(View.GONE);
+                });
             }
         });
     }
