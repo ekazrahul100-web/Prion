@@ -566,6 +566,8 @@ public class ReelsActivity extends BaseActivity {
         final int capturedMode         = currentMode;
         final SortType.Type sortType   = currentSortType;
         final SortType.Time sortTime   = currentSortTime;
+        // Capture before the background thread so we know if this is the first batch
+        final int countBeforeAdd       = getCurrentAdapter().getItemCount();
 
         mExecutor.execute(() -> {
             try {
@@ -612,18 +614,22 @@ public class ReelsActivity extends BaseActivity {
                         for (Post p : posts) {
                             if (p.getPostType() != Post.VIDEO_TYPE && p.getPostType() != Post.GIF_TYPE) continue;
 
-                            // NSFW mode: only NSFW posts
-                            if (capturedMode == MODE_NSFW && !p.isNSFW()) continue;
-                            // SFW mode: no NSFW posts
-                            if (capturedMode == MODE_SFW && p.isNSFW()) continue;
-                            // Subscribed mode: respect per-account NSFW setting
-                            if (capturedMode == MODE_SUBSCRIBED && p.isNSFW()) {
-                                SharedPreferences nsfwPrefs = getSharedPreferences(
-                                        SharedPreferencesUtils.NSFW_AND_SPOILER_SHARED_PREFERENCES_FILE,
-                                        MODE_PRIVATE);
-                                boolean nsfwAllowed = nsfwPrefs.getBoolean(
-                                        finalAccountName + SharedPreferencesUtils.NSFW_BASE, false);
-                                if (!nsfwAllowed) continue;
+                            // In subreddit-locked (immersive) mode, skip the SFW/NSFW filter —
+                            // the user explicitly chose this subreddit so show all its video content.
+                            if (lockedSubreddit == null) {
+                                // NSFW mode: only NSFW posts
+                                if (capturedMode == MODE_NSFW && !p.isNSFW()) continue;
+                                // SFW mode: no NSFW posts
+                                if (capturedMode == MODE_SFW && p.isNSFW()) continue;
+                                // Subscribed mode: respect per-account NSFW setting
+                                if (capturedMode == MODE_SUBSCRIBED && p.isNSFW()) {
+                                    SharedPreferences nsfwPrefs = getSharedPreferences(
+                                            SharedPreferencesUtils.NSFW_AND_SPOILER_SHARED_PREFERENCES_FILE,
+                                            MODE_PRIVATE);
+                                    boolean nsfwAllowed = nsfwPrefs.getBoolean(
+                                            finalAccountName + SharedPreferencesUtils.NSFW_BASE, false);
+                                    if (!nsfwAllowed) continue;
+                                }
                             }
 
                             // Hide-seen filter
@@ -639,10 +645,12 @@ public class ReelsActivity extends BaseActivity {
                         currentAdapter.addPosts(videos);
                         isLoading = false;
                         progressBar.setVisibility(View.GONE);
-                        // If we got zero videos but there's more pages, keep fetching
+
                         if (videos.isEmpty() && newAfter != null) {
+                            // No matching videos on this page — fetch the next page
                             fetchVideos();
-                        } else if (currentAdapter.getItemCount() == videos.size() && !videos.isEmpty()) {
+                        } else if (countBeforeAdd == 0 && !videos.isEmpty()) {
+                            // First batch — kick off playback at position 0
                             currentAdapter.playVideoAt(0);
                         }
                     });
