@@ -154,7 +154,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         int resizeMode = resizeModes.containsKey(position)
                 ? resizeModes.get(position)
                 : AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH;
-        holder.playerView.setResizeModeRaw(resizeMode);
+        holder.playerView.setResizeMode(resizeMode);
 
         // Attach auto-advance listener if present
         if (existingPlayer != null) {
