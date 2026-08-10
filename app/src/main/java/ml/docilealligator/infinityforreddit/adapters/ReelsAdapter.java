@@ -1,6 +1,7 @@
 package ml.docilealligator.infinityforreddit.adapters;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -17,6 +18,8 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
+import androidx.preference.PreferenceManager;
+
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
@@ -35,7 +38,9 @@ import java.util.List;
 import java.util.Map;
 
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity;
 import ml.docilealligator.infinityforreddit.post.Post;
+
 
 
 public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHolder> {
@@ -175,7 +180,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         holder.pauseIndicator.setVisibility(View.GONE);
         holder.muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
 
-        SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+
         boolean isHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
         if (holder.qualityButton != null) {
             holder.qualityButton.setText(isHd ? "HD" : "SD");
@@ -285,7 +291,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
                     player.setMediaSource(mediaSource);
                     player.prepare();
-                    SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+
                     applyQualityToPlayer(player, sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true));
                     player.setVolume(isMuted ? 0f : 1f);
                     player.setPlayWhenReady(i == position);
@@ -319,9 +326,11 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         ImageView saveButton;
         ImageView shareButton;
         ImageView pauseIndicator;
+        TextView qualityButton;
         ImageView muteButton;
         LinearLayout openPostHint;
         SeekBar seekBar;
+
 
         private GestureDetector gestureDetector;
         private final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -373,7 +382,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             // ── Quality toggle ────────────────────────────────
             if (qualityButton != null) {
                 qualityButton.setOnClickListener(v -> {
-                    SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+
                     boolean isHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
                     boolean newHd = !isHd;
                     sp.edit().putBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, newHd).apply();
