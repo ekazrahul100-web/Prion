@@ -424,7 +424,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                  * reach us here.
                  */
                 @Override
-                public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2,
+                public boolean onFling(@Nullable MotionEvent e1, @NonNull MotionEvent e2,
                                        float velocityX, float velocityY) {
                     if (e1 == null) return false;
                     float deltaX = e2.getX() - e1.getX();
