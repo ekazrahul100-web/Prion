@@ -3171,8 +3171,9 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                         }
                         ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
                         if (!trackGroups.isEmpty()) {
-                            if (getPost().isNormalVideo()) {
+                            if (getPost() != null) {
                                 videoQualityButton.setVisibility(View.VISIBLE);
+
                                 videoQualityButton.setOnClickListener(view -> {
                                     if (helper == null) {
                                         return;

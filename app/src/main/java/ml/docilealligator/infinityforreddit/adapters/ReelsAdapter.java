@@ -174,7 +174,31 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
         holder.pauseIndicator.setVisibility(View.GONE);
         holder.muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
+
+        SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
+        if (holder.qualityButton != null) {
+            holder.qualityButton.setText(isHd ? "HD" : "SD");
+        }
     }
+
+    public static void applyQualityToPlayer(@Nullable ExoPlayer player, boolean preferHd) {
+        if (player == null) return;
+        if (preferHd) {
+            player.setTrackSelectionParameters(
+                    player.getTrackSelectionParameters().buildUpon()
+                            .setMaxVideoSize(Integer.MAX_VALUE, Integer.MAX_VALUE)
+                            .setMaxVideoBitrate(Integer.MAX_VALUE)
+                            .build());
+        } else {
+            player.setTrackSelectionParameters(
+                    player.getTrackSelectionParameters().buildUpon()
+                            .setMaxVideoSize(854, 480)
+                            .setMaxVideoBitrate(1_200_000)
+                            .build());
+        }
+    }
+
 
 
     private void updateVoteUI(ReelViewHolder holder, Post post) {
@@ -261,10 +285,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
                     player.setMediaSource(mediaSource);
                     player.prepare();
+                    SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                    applyQualityToPlayer(player, sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true));
                     player.setVolume(isMuted ? 0f : 1f);
                     player.setPlayWhenReady(i == position);
                     players.put(i, player);
                     notifyItemChanged(i);
+
                 } else {
                     ExoPlayer p = players.get(i);
                     if (p != null) {
@@ -338,9 +365,30 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             saveButton     = itemView.findViewById(R.id.save_button);
             shareButton    = itemView.findViewById(R.id.share_button);
             pauseIndicator = itemView.findViewById(R.id.pause_indicator);
+            qualityButton  = itemView.findViewById(R.id.quality_button);
             muteButton     = itemView.findViewById(R.id.mute_button);
             openPostHint   = itemView.findViewById(R.id.open_post_hint);
             seekBar        = itemView.findViewById(R.id.seek_bar);
+
+            // ── Quality toggle ────────────────────────────────
+            if (qualityButton != null) {
+                qualityButton.setOnClickListener(v -> {
+                    SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean isHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
+                    boolean newHd = !isHd;
+                    sp.edit().putBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, newHd).apply();
+
+                    qualityButton.setText(newHd ? "HD" : "SD");
+
+                    int pos = getBindingAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        ExoPlayer p = players.get(pos);
+                        if (p != null) {
+                            applyQualityToPlayer(p, newHd);
+                        }
+                    }
+                });
+            }
 
             // ── Mute toggle ──────────────────────────────────
             muteButton.setOnClickListener(v -> {

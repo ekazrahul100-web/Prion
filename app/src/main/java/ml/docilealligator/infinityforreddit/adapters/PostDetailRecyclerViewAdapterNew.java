@@ -2247,8 +2247,9 @@ public class PostDetailRecyclerViewAdapterNew extends RecyclerView.Adapter<Recyc
 
                         ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
                         if (!trackGroups.isEmpty()) {
-                            if (mPost.isNormalVideo()) {
+                            if (mPost != null) {
                                 videoQualityButton.setVisibility(View.VISIBLE);
+
                                 videoQualityButton.setOnClickListener(view -> {
                                     if (helper == null) {
                                         return;

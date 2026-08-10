@@ -173,6 +173,27 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- HD/SD Quality toggle button -->
+    <TextView
+        android:id="@+id/quality_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HD"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/exo_player_control_button_circular_background"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="@id/mute_button"
+        app:layout_constraintBottom_toBottomOf="@id/mute_button"
+        app:layout_constraintEnd_toStartOf="@id/mute_button" />
+
     <!-- Mute toggle button (above action buttons) -->
     <ImageView
         android:id="@+id/mute_button"
