@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Double-tap like heart animation -->
     <ImageView
         android:id="@+id/like_animation"
         android:layout_width="120dp"
@@ -29,6 +30,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Pause indicator (tap to pause) -->
     <ImageView
         android:id="@+id/pause_indicator"
         android:layout_width="72dp"
@@ -41,6 +43,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Right-side action buttons column -->
     <LinearLayout
         android:id="@+id/actions_container"
         android:layout_width="wrap_content"
@@ -60,7 +63,7 @@
             android:src="@drawable/ic_upvote_24dp"
             app:tint="@android:color/white"
             android:background="?attr/selectableItemBackgroundBorderless" />
-            
+
         <TextView
             android:id="@+id/score_text"
             android:layout_width="wrap_content"
@@ -110,12 +113,13 @@
             android:background="?attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 
+    <!-- Bottom-left: subreddit name + post title + "View post" tap target -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -141,8 +145,35 @@
             android:ellipsize="end"
             android:layout_marginTop="4dp" />
 
+        <!-- "View post" tap target (also activated by swipe-left gesture) -->
+        <LinearLayout
+            android:id="@+id/open_post_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp"
+            android:background="?attr/selectableItemBackground"
+            android:padding="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="View post"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_keyboard_arrow_down_24dp"
+                android:rotation="-90"
+                app:tint="#CCFFFFFF" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- Mute toggle button (above action buttons) -->
     <ImageView
         android:id="@+id/mute_button"
         android:layout_width="32dp"
@@ -156,6 +187,7 @@
         app:layout_constraintBottom_toTopOf="@id/actions_container"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Progress seekbar at the very bottom -->
     <SeekBar
         android:id="@+id/seek_bar"
         android:layout_width="match_parent"

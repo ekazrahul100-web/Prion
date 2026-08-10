@@ -46,7 +46,9 @@
         <activity
             android:name=".activities.ReelsActivity"
             android:exported="false"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.CopyMultiRedditActivity"
             android:exported="false"

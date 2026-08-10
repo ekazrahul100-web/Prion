@@ -1302,6 +1302,11 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         if (itemId == android.R.id.home) {
             finish();
             return true;
+        } else if (itemId == R.id.action_immersive_reels_view_subreddit_detail_activity) {
+            Intent reelsIntent = new Intent(this, ReelsActivity.class);
+            reelsIntent.putExtra(ReelsActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+            startActivity(reelsIntent);
+            return true;
         } else if (itemId == R.id.action_sort_view_subreddit_detail_activity) {
             displaySortTypeBottomSheetFragment();
             return true;

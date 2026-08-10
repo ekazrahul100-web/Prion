@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black">
@@ -26,16 +25,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Top overlay: mode selector (left) | sort chip (center) | controls (right) -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="32dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingTop="40dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Left: SFW / Subscribed / NSFW dropdown -->
         <LinearLayout
             android:id="@+id/mode_selector_container"
             android:layout_width="wrap_content"
@@ -57,13 +59,41 @@
                 android:textColor="@android:color/white" />
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
                 app:tint="@android:color/white" />
         </LinearLayout>
 
+        <!-- Center: sort type chip (e.g. "Hot ▾") -->
+        <LinearLayout
+            android:id="@+id/sort_selector_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/sort_type_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hot"
+                android:textSize="15sp"
+                android:textColor="@android:color/white" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+                app:tint="@android:color/white" />
+        </LinearLayout>
+
+        <!-- Right: hide-seen toggle + refresh + settings -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -76,7 +106,7 @@
                 android:id="@+id/hide_seen_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:theme="@style/Widget.AppCompat.CompoundButton.Switch" />
 
             <ImageView
@@ -87,6 +117,17 @@
                 android:src="@drawable/ic_refresh_day_night_24dp"
                 app:tint="@android:color/white"
                 android:background="?attr/selectableItemBackgroundBorderless" />
+
+            <ImageView
+                android:id="@+id/reels_settings_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="4dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_settings_day_night_24dp"
+                app:tint="@android:color/white"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Reels Settings" />
         </LinearLayout>
     </RelativeLayout>
 

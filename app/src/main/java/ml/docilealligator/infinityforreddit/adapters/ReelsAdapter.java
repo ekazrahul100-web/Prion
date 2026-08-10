@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.SeekBar;
 import android.os.Handler;
@@ -24,6 +25,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,25 +46,40 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         void onComments(Post post);
         void onSave(Post post);
         void onShare(Post post);
+        /** Called when the user taps "View post" or swipes left. */
+        void onOpenPost(Post post);
     }
 
-    private static final int COLOR_UPVOTED = 0xFFFF8B60;
-    private static final int COLOR_DOWNVOTED = 0xFF9494FF;
-    private static final int COLOR_SAVED = 0xFFFFEB3B;
-    private static final int COLOR_DEFAULT = 0xFFFFFFFF;
+    private static final int COLOR_UPVOTED   = 0xFFFF8B60;
+    private static final int COLOR_DOWNVOTED  = 0xFF9494FF;
+    private static final int COLOR_SAVED      = 0xFFFFEB3B;
+    private static final int COLOR_DEFAULT    = 0xFFFFFFFF;
+
+    /** Minimum horizontal swipe velocity (px/s) to trigger open-post. */
+    private static final int SWIPE_VELOCITY_THRESHOLD = 500;
+    /** Minimum horizontal distance (px) to be considered a swipe. */
+    private static final int SWIPE_DISTANCE_THRESHOLD = 80;
 
     private final Context context;
     private final InteractionListener listener;
     private final List<Post> posts = new ArrayList<>();
-    
+
+    private int currentPlayingPosition = -1;
+    private final Map<Integer, ExoPlayer> players = new HashMap<>();
+    private boolean isMuted = false;
+
+    // Whether to use RESIZE_MODE_ZOOM (fill) for landscape videos.
+    // When false (default) videos just play with black bars — no cropping.
+    private boolean fillLandscapeVideos = false;
+
     public ReelsAdapter(Context context, InteractionListener listener) {
         this.context = context;
         this.listener = listener;
     }
 
-    private int currentPlayingPosition = -1;
-    private final Map<Integer, ExoPlayer> players = new HashMap<>();
-    private boolean isMuted = false;
+    public void setFillLandscapeVideos(boolean fill) {
+        this.fillLandscapeVideos = fill;
+    }
 
     public void addPosts(List<Post> newPosts) {
         int start = posts.size();
@@ -104,32 +121,34 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     @Override
     public void onBindViewHolder(@NonNull ReelViewHolder holder, int position) {
         Post post = posts.get(position);
-        
+
         holder.titleText.setText(post.getTitle());
         holder.subredditText.setText("r/" + post.getSubredditName());
         holder.scoreText.setText(String.valueOf(post.getScore()));
-        
-        // Update button tints based on current state
+
         updateVoteUI(holder, post);
         updateSaveUI(holder, post);
 
-        // Attach the player if it exists for this position
         ExoPlayer existingPlayer = players.get(position);
         holder.playerView.setPlayer(existingPlayer);
-        
+
         holder.pauseIndicator.setVisibility(View.GONE);
         holder.muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
     }
 
     private void updateVoteUI(ReelViewHolder holder, Post post) {
         int voteType = post.getVoteType();
-        holder.upvoteButton.setColorFilter(voteType == 1 ? COLOR_UPVOTED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.downvoteButton.setColorFilter(voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
-        holder.scoreText.setTextColor(voteType == 1 ? COLOR_UPVOTED : (voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT));
+        holder.upvoteButton.setColorFilter(voteType == 1 ? COLOR_UPVOTED : COLOR_DEFAULT,
+                android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.downvoteButton.setColorFilter(voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT,
+                android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.scoreText.setTextColor(voteType == 1 ? COLOR_UPVOTED
+                : (voteType == -1 ? COLOR_DOWNVOTED : COLOR_DEFAULT));
     }
 
     private void updateSaveUI(ReelViewHolder holder, Post post) {
-        holder.saveButton.setColorFilter(post.isSaved() ? COLOR_SAVED : COLOR_DEFAULT, android.graphics.PorterDuff.Mode.SRC_IN);
+        holder.saveButton.setColorFilter(post.isSaved() ? COLOR_SAVED : COLOR_DEFAULT,
+                android.graphics.PorterDuff.Mode.SRC_IN);
     }
 
     @Override
@@ -189,8 +208,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     player.setRepeatMode(Player.REPEAT_MODE_ALL);
 
                     DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
-                    
-                    // Use HLS for Reddit videos (*.m3u8), Progressive for direct mp4/gif
+
                     MediaSource mediaSource;
                     if (url.contains(".m3u8") || url.contains("v.redd.it")) {
                         mediaSource = new HlsMediaSource.Factory(dataSourceFactory)
@@ -217,6 +235,10 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         }
     }
 
+    // ─────────────────────────────────────────────────────────
+    // ViewHolder
+    // ─────────────────────────────────────────────────────────
+
     class ReelViewHolder extends RecyclerView.ViewHolder {
         PlayerView playerView;
         TextView titleText;
@@ -230,6 +252,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         ImageView shareButton;
         ImageView pauseIndicator;
         ImageView muteButton;
+        LinearLayout openPostHint;
         SeekBar seekBar;
 
         private GestureDetector gestureDetector;
@@ -263,21 +286,22 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
         public ReelViewHolder(@NonNull View itemView) {
             super(itemView);
-            playerView = itemView.findViewById(R.id.player_view);
-            titleText = itemView.findViewById(R.id.title_text);
+            playerView    = itemView.findViewById(R.id.player_view);
+            titleText     = itemView.findViewById(R.id.title_text);
             subredditText = itemView.findViewById(R.id.subreddit_text);
-            scoreText = itemView.findViewById(R.id.score_text);
+            scoreText     = itemView.findViewById(R.id.score_text);
             likeAnimation = itemView.findViewById(R.id.like_animation);
-            
-            upvoteButton = itemView.findViewById(R.id.upvote_button);
+            upvoteButton  = itemView.findViewById(R.id.upvote_button);
             downvoteButton = itemView.findViewById(R.id.downvote_button);
             commentsButton = itemView.findViewById(R.id.comments_button);
-            saveButton = itemView.findViewById(R.id.save_button);
-            shareButton = itemView.findViewById(R.id.share_button);
+            saveButton     = itemView.findViewById(R.id.save_button);
+            shareButton    = itemView.findViewById(R.id.share_button);
             pauseIndicator = itemView.findViewById(R.id.pause_indicator);
-            muteButton = itemView.findViewById(R.id.mute_button);
-            seekBar = itemView.findViewById(R.id.seek_bar);
+            muteButton     = itemView.findViewById(R.id.mute_button);
+            openPostHint   = itemView.findViewById(R.id.open_post_hint);
+            seekBar        = itemView.findViewById(R.id.seek_bar);
 
+            // ── Mute toggle ──────────────────────────────────
             muteButton.setOnClickListener(v -> {
                 isMuted = !isMuted;
                 for (ExoPlayer p : players.values()) {
@@ -286,6 +310,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 muteButton.setImageResource(isMuted ? R.drawable.ic_mute_24dp : R.drawable.ic_unmute_24dp);
             });
 
+            // ── Seek bar ─────────────────────────────────────
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -293,9 +318,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                         int pos = getBindingAdapterPosition();
                         if (pos != RecyclerView.NO_POSITION) {
                             ExoPlayer player = players.get(pos);
-                            if (player != null) {
-                                player.seekTo(progress);
-                            }
+                            if (player != null) player.seekTo(progress);
                         }
                     }
                 }
@@ -303,17 +326,15 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 @Override public void onStopTrackingTouch(SeekBar seekBar) {}
             });
 
-            // Set up click listeners ONCE in the constructor, not in onBind
+            // ── Vote buttons ─────────────────────────────────
             upvoteButton.setOnClickListener(v -> {
                 int pos = getBindingAdapterPosition();
                 if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return;
                 Post post = posts.get(pos);
                 if (post.getVoteType() == 1) {
-                    // Already upvoted, remove vote
                     post.setVoteType(0);
                     post.setScore(post.getScore() - 1);
                 } else {
-                    // Apply upvote (undo downvote if active)
                     post.setScore(post.getScore() + (post.getVoteType() == -1 ? 2 : 1));
                     post.setVoteType(1);
                 }
@@ -326,11 +347,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 if (pos == RecyclerView.NO_POSITION || pos >= posts.size()) return;
                 Post post = posts.get(pos);
                 if (post.getVoteType() == -1) {
-                    // Already downvoted, remove vote
                     post.setVoteType(0);
                     post.setScore(post.getScore() + 1);
                 } else {
-                    // Apply downvote (undo upvote if active)
                     post.setScore(post.getScore() - (post.getVoteType() == 1 ? 2 : 1));
                     post.setVoteType(-1);
                 }
@@ -361,8 +380,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 }
             });
 
-            // Double-tap to like gesture on the player view
+            // ── "View post" tap target ────────────────────────
+            openPostHint.setOnClickListener(v -> openCurrentPost());
+
+            // ── Gesture detector: double-tap to like, single-tap to pause/play,
+            //    swipe-left to open post ────────────────────────────────────────
             gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     int pos = getBindingAdapterPosition();
@@ -393,12 +417,40 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     }
                     return true;
                 }
+
+                /**
+                 * Swipe LEFT (negative velocityX, larger than threshold) → open post.
+                 * The ViewPager2 only consumes VERTICAL flings, so horizontal flings
+                 * reach us here.
+                 */
+                @Override
+                public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2,
+                                       float velocityX, float velocityY) {
+                    if (e1 == null) return false;
+                    float deltaX = e2.getX() - e1.getX();
+                    float deltaY = e2.getY() - e1.getY();
+                    // Must be more horizontal than vertical, fast enough, and left-ward
+                    if (Math.abs(deltaX) > Math.abs(deltaY)
+                            && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
+                            && deltaX < -SWIPE_DISTANCE_THRESHOLD) {
+                        openCurrentPost();
+                        return true;
+                    }
+                    return false;
+                }
             });
 
             playerView.setOnTouchListener((v, event) -> {
                 gestureDetector.onTouchEvent(event);
-                return true; // consume touch to prevent PlayerView default behavior
+                return true;
             });
+        }
+
+        private void openCurrentPost() {
+            int pos = getBindingAdapterPosition();
+            if (pos != RecyclerView.NO_POSITION && pos < posts.size()) {
+                listener.onOpenPost(posts.get(pos));
+            }
         }
 
         private void showLikeAnimation() {
