@@ -223,24 +223,21 @@ public class ReelsActivity extends BaseActivity {
 
         View topOverlay = findViewById(R.id.top_overlay_container);
         if (topOverlay != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(topOverlay, (v, insets) -> {
-                int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                if (statusBarHeight <= 0) {
-                    int resourceId = v.getResources().getIdentifier("status_bar_height", "dimen", "android");
-                    if (resourceId > 0) {
-                        statusBarHeight = v.getResources().getDimensionPixelSize(resourceId);
-                    }
-                }
-                int extraPaddingPx = (int) (16 * v.getResources().getDisplayMetrics().density);
-                int topPadding = statusBarHeight + extraPaddingPx;
-                v.setPadding(v.getPaddingLeft(), topPadding, v.getPaddingRight(), v.getPaddingBottom());
-                return insets;
-            });
-            ViewCompat.requestApplyInsets(topOverlay);
+            int statusBarHeight = 0;
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+            } else {
+                statusBarHeight = (int) (32 * getResources().getDisplayMetrics().density);
+            }
+            // Just use the exact status bar height plus a tiny 6dp margin so it's not totally flush,
+            // but doesn't float disconnected like before.
+            int topPadding = statusBarHeight + (int) (6 * getResources().getDisplayMetrics().density);
+            topOverlay.setPadding(topOverlay.getPaddingLeft(), topPadding, topOverlay.getPaddingRight(), topOverlay.getPaddingBottom());
         }
 
-
         categorySelectorContainer.setOnClickListener(v -> showCategoryPopup());
+
 
 
         // Read settings from ReelsSettingsActivity prefs
@@ -889,7 +886,12 @@ public class ReelsActivity extends BaseActivity {
             String sub = p.getSubredditName() != null ? p.getSubredditName().toLowerCase() : "unknown";
             if (!subMap.containsKey(sub)) subMap.put(sub, new ArrayList<>());
             List<Post> list = subMap.get(sub);
-            if (list != null) list.add(p);
+            // Limit to max 5 posts per subreddit per batch. 
+            // This forces the feed to quickly exhaust dominant subreddits 
+            // and trigger a fresh fetch from the next batch of subreddits in the category deck!
+            if (list != null && list.size() < 5) {
+                list.add(p);
+            }
         }
 
         List<Post> result = new ArrayList<>();
