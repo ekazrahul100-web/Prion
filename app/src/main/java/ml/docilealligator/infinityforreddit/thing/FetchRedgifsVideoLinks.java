@@ -37,7 +37,7 @@ public class FetchRedgifsVideoLinks {
                                 redgifsId, APIUtils.USER_AGENT)
                         .execute();
                 if (response.isSuccessful()) {
-                    parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener);
+                    parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener, currentAccountSharedPreferences);
                 } else if (response.code() == 401) {
                     // Token expired, try once more with new token
                     accessToken = refreshAccessToken(redgifsRetrofit, currentAccountSharedPreferences);
@@ -49,7 +49,7 @@ public class FetchRedgifsVideoLinks {
                                         redgifsId, APIUtils.USER_AGENT)
                                 .execute();
                         if (response.isSuccessful()) {
-                            parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener);
+                            parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener, currentAccountSharedPreferences);
                         } else {
                             handler.post(() -> fetchVideoLinkListener.failed(null));
                         }
@@ -117,7 +117,7 @@ public class FetchRedgifsVideoLinks {
             try {
                 Response<String> response = redgifsCall.execute();
                 if (response.isSuccessful()) {
-                    parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener);
+                    parseRedgifsVideoLinks(handler, response.body(), fetchVideoLinkListener, null);
                 } else {
                     handler.post(() -> fetchVideoLinkListener.failed(null));
                 }
@@ -129,27 +129,14 @@ public class FetchRedgifsVideoLinks {
     }
 
     private static void parseRedgifsVideoLinks(Handler handler, @Nullable String response,
-                                              FetchVideoLinkListener fetchVideoLinkListener) {
-        /*try {
-            *//*String mp4 = new JSONObject(response).getJSONObject(JSONUtils.GIF_KEY).getJSONObject(JSONUtils.URLS_KEY)
-                    .getString(JSONUtils.HD_KEY);
-            if (mp4.contains("-silent")) {
-                mp4 = mp4.substring(0, mp4.indexOf("-silent")) + ".mp4";
-            }
-            final String mp4Name = mp4;
-            handler.post(() -> fetchVideoLinkListener.onFetchRedgifsVideoLinkSuccess(mp4Name, mp4Name));*//*
-
-            String mp4 = new JSONObject(response).getString(JSONUtils.VIDEO_DOWNLOAD_URL);
-            handler.post(() -> fetchVideoLinkListener.onFetchRedgifsVideoLinkSuccess(mp4, mp4));
-        } catch (JSONException e) {
-            e.printStackTrace();
-            handler.post(() -> fetchVideoLinkListener.failed(null));
-        }*/
-
+                                              FetchVideoLinkListener fetchVideoLinkListener,
+                                              @Nullable SharedPreferences currentAccountSharedPreferences) {
         try {
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject gif = jsonResponse.getJSONObject(JSONUtils.GIF_KEY);
-            boolean preferHd = currentAccountSharedPreferences.getBoolean(
+            JSONObject urls = gif.getJSONObject(JSONUtils.URLS_KEY);
+
+            boolean preferHd = currentAccountSharedPreferences == null || currentAccountSharedPreferences.getBoolean(
                     ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
 
             String mp4 = null;
@@ -178,13 +165,13 @@ public class FetchRedgifsVideoLinks {
     }
 
     @Nullable
-    private static String parseRedgifsVideoLinks(@Nullable String response, SharedPreferences currentAccountSharedPreferences) {
+    private static String parseRedgifsVideoLinks(@Nullable String response, @Nullable SharedPreferences currentAccountSharedPreferences) {
         try {
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject gif = jsonResponse.getJSONObject(JSONUtils.GIF_KEY);
             JSONObject urls = gif.getJSONObject(JSONUtils.URLS_KEY);
 
-            boolean preferHd = currentAccountSharedPreferences.getBoolean(
+            boolean preferHd = currentAccountSharedPreferences == null || currentAccountSharedPreferences.getBoolean(
                     ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
 
             if (!preferHd && urls.has("sd")) {
@@ -201,6 +188,7 @@ public class FetchRedgifsVideoLinks {
             return null;
         }
     }
+
 
 
     private static String getValidAccessToken(Retrofit redgifsRetrofit, SharedPreferences currentAccountSharedPreferences) {
