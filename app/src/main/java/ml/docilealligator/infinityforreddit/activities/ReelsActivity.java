@@ -728,7 +728,7 @@ public class ReelsActivity extends BaseActivity {
                 }
 
                 // If cooldown set has consumed most subreddits, reset cooldown for a new round
-                if (available.size() < 6 && currentCategoryDeck.size() >= 6) {
+                if (available.size() < 20 && currentCategoryDeck.size() >= 20) {
                     categoryCooldownSet.clear();
                     available.clear();
                     available.addAll(currentCategoryDeck);
@@ -738,7 +738,7 @@ public class ReelsActivity extends BaseActivity {
                     Collections.shuffle(available);
                 }
 
-                int batchSize = Math.min(6, available.size());
+                int batchSize = Math.min(20, available.size());
                 List<String> chosenBatch = available.subList(0, batchSize);
                 categoryCooldownSet.addAll(chosenBatch);
                 pool.addAll(chosenBatch);
@@ -815,13 +815,14 @@ public class ReelsActivity extends BaseActivity {
                     else if (capturedMode == MODE_SUBSCRIBED) subscribedAfter = newAfter;
                     else                                       sfwAfter = newAfter;
 
-                    List<Post> videos = new ArrayList<>();
+                    List<Post> finalVideos = new ArrayList<>();
                     if (posts != null) {
+                        Map<String, Integer> subCounts = new HashMap<>();
+                        List<Post> validVideos = new ArrayList<>();
                         for (Post p : posts) {
                             if (p.getPostType() != Post.VIDEO_TYPE && p.getPostType() != Post.GIF_TYPE) continue;
 
-                            // In subreddit-locked (immersive) mode, skip the SFW/NSFW filter —
-                            // the user explicitly chose this subreddit so show all its video content.
+                            // In subreddit-locked (immersive) mode, skip the SFW/NSFW filter
                             if (lockedSubreddit == null) {
                                 // NSFW mode: only NSFW posts
                                 if (capturedMode == MODE_NSFW && !p.isNSFW()) continue;
@@ -841,22 +842,31 @@ public class ReelsActivity extends BaseActivity {
                             // Hide-seen filter
                             if (hideSeenEnabled &&
                                     SeenPostsManager.hasSeen(mSharedPreferences, p.getId(), REELS_NAMESPACE)) continue;
-
-                            videos.add(p);
+                                    
+                            // Subreddit dominance limiter
+                            String sub = p.getSubredditName() != null ? p.getSubredditName().toLowerCase() : "unknown";
+                            int count = subCounts.containsKey(sub) ? subCounts.get(sub) : 0;
+                            if (count < 5) {
+                                subCounts.put(sub, count + 1);
+                                validVideos.add(p);
+                            }
                         }
+                        
+                        // TRUE RANDOM SHUFFLE
+                        Collections.shuffle(validVideos);
+                        finalVideos.addAll(validVideos);
                     }
 
-                    List<Post> interleaved = interleavePostsBySubreddit(videos);
                     new Handler(Looper.getMainLooper()).post(() -> {
                         ReelsAdapter currentAdapter = getCurrentAdapter();
-                        currentAdapter.addPosts(interleaved);
+                        currentAdapter.addPosts(finalVideos);
                         isLoading = false;
                         progressBar.setVisibility(View.GONE);
 
-                        if (interleaved.isEmpty() && newAfter != null) {
+                        if (finalVideos.isEmpty() && newAfter != null) {
                             // No matching videos on this page — fetch the next page
                             fetchVideos();
-                        } else if (countBeforeAdd == 0 && !interleaved.isEmpty()) {
+                        } else if (countBeforeAdd == 0 && !finalVideos.isEmpty()) {
                             // First batch — kick off playback at position 0
                             currentAdapter.playVideoAt(0);
                         }
@@ -878,35 +888,7 @@ public class ReelsActivity extends BaseActivity {
         });
     }
 
-    private List<Post> interleavePostsBySubreddit(List<Post> posts) {
-        if (posts == null || posts.size() <= 1) return posts != null ? posts : new ArrayList<>();
 
-        Map<String, List<Post>> subMap = new LinkedHashMap<>();
-        for (Post p : posts) {
-            String sub = p.getSubredditName() != null ? p.getSubredditName().toLowerCase() : "unknown";
-            if (!subMap.containsKey(sub)) subMap.put(sub, new ArrayList<>());
-            List<Post> list = subMap.get(sub);
-            // Limit to max 5 posts per subreddit per batch. 
-            // This forces the feed to quickly exhaust dominant subreddits 
-            // and trigger a fresh fetch from the next batch of subreddits in the category deck!
-            if (list != null && list.size() < 5) {
-                list.add(p);
-            }
-        }
-
-        List<Post> result = new ArrayList<>();
-        boolean addedAny = true;
-        while (addedAny) {
-            addedAny = false;
-            for (List<Post> subList : subMap.values()) {
-                if (!subList.isEmpty()) {
-                    result.add(subList.remove(0));
-                    addedAny = true;
-                }
-            }
-        }
-        return result;
-    }
 
     // ─────────────────────────────────────────────────────────────────────
     // Lifecycle
