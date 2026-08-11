@@ -3112,7 +3112,8 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                             });
                 }
             } else {
-                SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(mContext);
+                SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(mActivity);
+
                 boolean preferHd = sp.getBoolean(ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
                 String adjustedUrl = ml.docilealligator.infinityforreddit.adapters.ReelsAdapter.getQualityAdjustedUrl(post.getVideoUrl(), preferHd);
                 bindVideoUri(Uri.parse(adjustedUrl != null ? adjustedUrl : post.getVideoUrl()));
