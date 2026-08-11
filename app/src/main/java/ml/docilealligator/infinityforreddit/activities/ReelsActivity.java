@@ -117,11 +117,11 @@ public class ReelsActivity extends BaseActivity {
     private LinearLayout sortSelectorContainer;
     private TextView currentModeTextView;
     private TextView sortTypeTextView;
-    private SwitchCompat hideSeenToggle;
     private ImageView refreshButton;
     private ImageView reelsSettingsButton;
     private LinearLayout categorySelectorContainer;
     private TextView categoryTextView;
+
 
     public static final String PREF_NSFW_CATEGORY = "pref_reels_nsfw_category";
 
@@ -670,9 +670,10 @@ public class ReelsActivity extends BaseActivity {
                 Map<String, List<String>> categoriesMap = NsfwCategoryManager.loadCategories(this, mSharedPreferences);
                 String selectedCategory = mSharedPreferences.getString(NsfwCategoryManager.PREF_SELECTED_CATEGORY_NAME, "All NSFW");
                 List<String> categorySubs;
-                if (selectedCategory.equals("All NSFW") || !categoriesMap.containsKey(selectedCategory)) {
+                if (selectedCategory == null || selectedCategory.equals("All NSFW") || !categoriesMap.containsKey(selectedCategory)) {
                     categorySubs = NsfwCategoryManager.getAllSubreddits(categoriesMap);
                 } else {
+
                     categorySubs = categoriesMap.get(selectedCategory);
                 }
                 if (categorySubs != null && !categorySubs.isEmpty()) {
