@@ -33,8 +33,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import ml.docilealligator.infinityforreddit.adapters.CategoryAdapter;
 import ml.docilealligator.infinityforreddit.utils.NsfwCategoryManager;
+
 
 
 
@@ -209,7 +213,18 @@ public class ReelsActivity extends BaseActivity {
         categorySelectorContainer = findViewById(R.id.category_selector_container);
         categoryTextView          = findViewById(R.id.category_text_view);
 
+        View topOverlay = findViewById(R.id.top_overlay_container);
+        if (topOverlay != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topOverlay, (v, insets) -> {
+                int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                int topPadding = Math.max(statusBarHeight + 16, 52);
+                v.setPadding(v.getPaddingLeft(), topPadding, v.getPaddingRight(), v.getPaddingBottom());
+                return insets;
+            });
+        }
+
         categorySelectorContainer.setOnClickListener(v -> showCategoryPopup());
+
 
         // Read settings from ReelsSettingsActivity prefs
         applySettingsFromPrefs();

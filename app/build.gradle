@@ -40,11 +40,16 @@ configurations {
 android {
     def keystorePropertiesFile = rootProject.file("keystore.properties")
 
-    if (keystorePropertiesFile.exists()) {
-        def keystoreProperties = new Properties()
-        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
-        signingConfigs {
+    signingConfigs {
+        debug {
+            storeFile rootProject.file("keystore/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+        if (keystorePropertiesFile.exists()) {
+            def keystoreProperties = new Properties()
+            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
             release {
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
@@ -52,8 +57,6 @@ android {
                 storePassword keystoreProperties['storePassword']
             }
         }
-    } else {
-        println("Warning: keystore.properties file not found. Skipping signing configuration.")
     }
 
     def testPropertiesFile = rootProject.file("test.properties")
@@ -80,8 +83,8 @@ android {
 
         minSdk 24
         targetSdk 35
-        versionCode 223
-        versionName "8.2.5.9.9.9.1"
+        versionCode 224
+        versionName "8.2.5.9.9.9.2"
         testInstrumentationRunner "com.kaspersky.kaspresso.runner.KaspressoRunner"
         testInstrumentationRunnerArguments.put("REDDIT_CLIENT_ID", testProperties['REDDIT_CLIENT_ID'] ?: 'test_reddit_client_id_default')
     }
@@ -92,11 +95,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+            resValue "string", "app_name", "Continuum Debug"
+        }
         release {
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.release
             } else {
-                println("Warning: keystore.properties file not found. Skipping signing configuration for release.")
+                signingConfig = signingConfigs.debug
             }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
