@@ -334,6 +334,7 @@
         <item>@string/saved</item>
         <item>@string/go_to_top</item>
         <item>@string/bottom_app_bar_option_toggle_thumbnail_side</item>
+        <item>@string/reels</item>
     </string-array>
 
     <string-array name="settings_main_activity_bottom_app_bar_options_anonymous">
@@ -348,6 +349,7 @@
         <item>@string/filter_posts</item>
         <item>@string/go_to_top</item>
         <item>@string/bottom_app_bar_option_toggle_thumbnail_side</item>
+        <item>@string/reels</item>
     </string-array>
 
     <string-array name="settings_main_activity_bottom_app_bar_options_anonymous_values">
@@ -362,7 +364,9 @@
         <item>12</item>
         <item>17</item>
         <item>18</item>
+        <item>19</item>
     </string-array>
+
 
     <string-array name="settings_other_activities_bottom_app_bar_options">
         <item>@string/home</item>

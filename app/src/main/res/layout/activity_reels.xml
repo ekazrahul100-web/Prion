@@ -63,10 +63,40 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+        </LinearLayout>
+
+        <!-- Category selector container (visible when in NSFW mode) -->
+        <LinearLayout
+            android:id="@+id/category_selector_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/mode_selector_container"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:background="?attr/selectableItemBackground"
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/category_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
                 app:tint="@android:color/white" />
         </LinearLayout>
 
         <!-- Center: sort type chip (e.g. "Hot ▾") -->
+
         <LinearLayout
             android:id="@+id/sort_selector_container"
             android:layout_width="wrap_content"

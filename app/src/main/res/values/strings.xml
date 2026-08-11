@@ -1651,7 +1651,10 @@
     <string name="awarder_karma">Awarder Karma:</string>
     <string name="awardee_karma">Awardee Karma:</string>
 
+    <string name="reels">Reels</string>
+
     <string name="handle_link">Handle Link</string>
+
     <string name="invalid_link">Invalid link</string>
 
     <string name="error_unsupported_video">Media includes video tracks, but none are playable by this device</string>

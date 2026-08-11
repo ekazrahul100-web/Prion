@@ -108,8 +108,77 @@ public class ReelsActivity extends BaseActivity {
     private SwitchCompat hideSeenToggle;
     private ImageView refreshButton;
     private ImageView reelsSettingsButton;
+    private LinearLayout categorySelectorContainer;
+    private TextView categoryTextView;
+
+    public static final String PREF_NSFW_CATEGORY = "pref_reels_nsfw_category";
+
+    private static final String[] NSFW_CATEGORY_NAMES = {
+            "All NSFW",
+            "GIFs & Videos",
+            "Amateur & Real",
+            "Ass & Bottoms",
+            "Boobs & Cleavage",
+            "Cosplay & Outfits",
+            "Kinky & Hardcore",
+            "Ethnicity"
+    };
+
+    private static final String[][] NSFW_CATEGORY_POOLS = {
+            // All NSFW (0)
+            {
+                    "nsfw_gif", "gonewild", "RealGirls", "asiansgonewild",
+                    "latinas", "thick", "petite", "curvy", "collegesluts",
+                    "nsfw_video", "holdthemoan", "pussy", "boobs", "ass",
+                    "thong", "milf", "amature", "tits", "nsfw",
+                    "legalteens", "barelylegal", "BustyPetite", "dirtypenpals",
+                    "nsfwcosplay", "nsfwoutfits", "PublicFlashing", "FlashingGirls",
+                    "gwpublic", "BigBoobsGW", "TittyDrop", "TinyTits",
+                    "PornGifs", "60fpsporn", "highresNSFW", "NSFW_HTML5",
+                    "gifsgonewild", "JizzToThis", "CumHaters", "FacialFun",
+                    "AmateurPorn", "Amateur", "AmateurArchives", "HomemadePorn"
+            },
+            // GIFs & Videos (1)
+            {
+                    "PornGifs", "nsfw_gif", "60fpsporn", "highresNSFW", "NSFW_HTML5",
+                    "gifsgonewild", "JizzToThis", "nsfw_video", "GFYbeauties"
+            },
+            // Amateur & Real (2)
+            {
+                    "gonewild", "RealGirls", "AmateurPorn", "Amateur", "HomemadePorn",
+                    "collegesluts", "legalteens", "barelylegal", "dirtypenpals", "AmateurArchives"
+            },
+            // Ass & Bottoms (3)
+            {
+                    "ass", "thick", "curvy", "pussy", "thong", "facedownassup",
+                    "booty", "panties", "bottomless", "milf"
+            },
+            // Boobs & Cleavage (4)
+            {
+                    "boobs", "tits", "TittyDrop", "BustyPetite", "BigBoobsGW",
+                    "TinyTits", "hugeboobs", "cleavage", "nipples"
+            },
+            // Cosplay & Outfits (5)
+            {
+                    "nsfwcosplay", "nsfwoutfits", "lingerie", "PublicFlashing",
+                    "FlashingGirls", "gwpublic"
+            },
+            // Kinky & Hardcore (6)
+            {
+                    "facesitting", "holdthemoan", "CumHaters", "FacialFun",
+                    "deepthroat", "bdsm", "bondage", "blowjobs"
+            },
+            // Ethnicity (7)
+            {
+                    "asiansgonewild", "latinas", "ebony", "IndianBabes",
+                    "AsianPorn", "juicyasians"
+            }
+    };
+
+    private int currentNsfwCategoryIndex = 0;
 
     // ── Adapters ──────────────────────────────────────────────────────────
+
     private ReelsAdapter sfwAdapter;
     private ReelsAdapter nsfwAdapter;
     private ReelsAdapter subscribedAdapter;
@@ -187,7 +256,12 @@ public class ReelsActivity extends BaseActivity {
         sortTypeTextView        = findViewById(R.id.sort_type_text_view);
         hideSeenToggle          = findViewById(R.id.hide_seen_toggle);
         refreshButton           = findViewById(R.id.refresh_button);
-        reelsSettingsButton     = findViewById(R.id.reels_settings_button);
+        categorySelectorContainer = findViewById(R.id.category_selector_container);
+        categoryTextView          = findViewById(R.id.category_text_view);
+        currentNsfwCategoryIndex  = mSharedPreferences.getInt(PREF_NSFW_CATEGORY, 0);
+
+        categorySelectorContainer.setOnClickListener(v -> showCategoryPopup());
+
 
         // Read settings from ReelsSettingsActivity prefs
         applySettingsFromPrefs();
@@ -476,11 +550,38 @@ public class ReelsActivity extends BaseActivity {
     // UI helpers
     // ─────────────────────────────────────────────────────────────────────
 
-    private void updateModeUI() {
-        if (currentMode == MODE_NSFW)            currentModeTextView.setText("NSFW");
-        else if (currentMode == MODE_SUBSCRIBED) currentModeTextView.setText("Subscribed");
-        else                                     currentModeTextView.setText("SFW");
+    private void showCategoryPopup() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("NSFW Category")
+                .setSingleChoiceItems(NSFW_CATEGORY_NAMES, currentNsfwCategoryIndex, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (currentNsfwCategoryIndex != which) {
+                        currentNsfwCategoryIndex = which;
+                        mSharedPreferences.edit().putInt(PREF_NSFW_CATEGORY, which).apply();
+                        updateModeUI();
+                        clearCurrentAdapter();
+                        fetchVideos();
+                    }
+                })
+                .show();
     }
+
+    private void updateModeUI() {
+        if (currentMode == MODE_NSFW) {
+            currentModeTextView.setText("NSFW");
+            if (lockedSubreddit == null) {
+                categorySelectorContainer.setVisibility(View.VISIBLE);
+                if (currentNsfwCategoryIndex >= 0 && currentNsfwCategoryIndex < NSFW_CATEGORY_NAMES.length) {
+                    categoryTextView.setText(NSFW_CATEGORY_NAMES[currentNsfwCategoryIndex]);
+                }
+            }
+        } else {
+            if (currentMode == MODE_SUBSCRIBED) currentModeTextView.setText("Subscribed");
+            else currentModeTextView.setText("SFW");
+            categorySelectorContainer.setVisibility(View.GONE);
+        }
+    }
+
 
     private void updateSortUI() {
         String label = currentSortType.fullName;
@@ -599,7 +700,15 @@ public class ReelsActivity extends BaseActivity {
             subreddit = lockedSubreddit;
         } else if (!fetchSubscribed) {
             List<String> pool = new ArrayList<>();
-            Collections.addAll(pool, currentMode == MODE_NSFW ? NSFW_POOL : SFW_POOL);
+            if (currentMode == MODE_NSFW) {
+                String[] categoryPool = (currentNsfwCategoryIndex >= 0 && currentNsfwCategoryIndex < NSFW_CATEGORY_POOLS.length)
+                        ? NSFW_CATEGORY_POOLS[currentNsfwCategoryIndex]
+                        : NSFW_POOL;
+                Collections.addAll(pool, categoryPool);
+            } else {
+                Collections.addAll(pool, SFW_POOL);
+            }
+
             Collections.shuffle(pool);
             int take = Math.min(20, pool.size());
             StringBuilder sb = new StringBuilder();
