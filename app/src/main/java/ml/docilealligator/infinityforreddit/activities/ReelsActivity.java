@@ -258,7 +258,9 @@ public class ReelsActivity extends BaseActivity {
         sortTypeTextView        = findViewById(R.id.sort_type_text_view);
         hideSeenToggle          = findViewById(R.id.hide_seen_toggle);
         refreshButton           = findViewById(R.id.refresh_button);
+        reelsSettingsButton     = findViewById(R.id.reels_settings_button);
         categorySelectorContainer = findViewById(R.id.category_selector_container);
+
         categoryTextView          = findViewById(R.id.category_text_view);
         currentNsfwCategoryIndex  = mSharedPreferences.getInt(PREF_NSFW_CATEGORY, 0);
 
