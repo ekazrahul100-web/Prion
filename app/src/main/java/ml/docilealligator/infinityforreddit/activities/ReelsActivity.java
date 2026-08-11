@@ -25,6 +25,8 @@ import androidx.media3.exoplayer.ExoPlayer;
 import androidx.viewpager2.widget.ViewPager2;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.ImageView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
