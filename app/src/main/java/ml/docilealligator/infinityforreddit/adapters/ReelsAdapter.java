@@ -275,8 +275,32 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     }
                     if (url == null || url.isEmpty()) continue;
 
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean preferHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
+                    url = getQualityAdjustedUrl(url, preferHd);
+
                     ExoPlayer player = new ExoPlayer.Builder(context).build();
-                    player.setRepeatMode(Player.REPEAT_MODE_ALL);
+                    player.setRepeatMode(Player.REPEAT_MODE_OFF);
+
+                    final int itemPos = i;
+                    player.addListener(new Player.Listener() {
+                        @Override
+                        public void onPlaybackStateChanged(int playbackState) {
+                            if (playbackState == Player.STATE_ENDED) {
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                                boolean autoAdv = prefs.getBoolean(ReelsSettingsActivity.PREF_AUTO_ADVANCE, false);
+                                if (autoAdv) {
+                                    Runnable listener = autoAdvanceListeners.get(itemPos);
+                                    if (listener != null) {
+                                        listener.run();
+                                    }
+                                } else {
+                                    player.seekTo(0);
+                                    player.play();
+                                }
+                            }
+                        }
+                    });
 
                     DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
 
@@ -291,9 +315,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
                     player.setMediaSource(mediaSource);
                     player.prepare();
-                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 
-                    applyQualityToPlayer(player, sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true));
+                    applyQualityToPlayer(player, preferHd);
                     player.setVolume(isMuted ? 0f : 1f);
                     player.setPlayWhenReady(i == position);
                     players.put(i, player);
@@ -309,6 +332,27 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             }
         }
     }
+
+    public static String getQualityAdjustedUrl(String url, boolean preferHd) {
+        if (url == null) return null;
+        if (!preferHd) {
+            if (url.contains("-hd.mp4")) {
+                return url.replace("-hd.mp4", "-mobile.mp4");
+            }
+            if (url.contains("v.redd.it") || url.contains("DASH_")) {
+                url = url.replaceAll("DASH_1080\\.mp4", "DASH_360.mp4")
+                         .replaceAll("DASH_720\\.mp4", "DASH_360.mp4")
+                         .replaceAll("DASH_960\\.mp4", "DASH_360.mp4")
+                         .replaceAll("DASH_480\\.mp4", "DASH_360.mp4");
+            }
+        } else {
+            if (url.contains("-mobile.mp4")) {
+                return url.replace("-mobile.mp4", "-hd.mp4");
+            }
+        }
+        return url;
+    }
+
 
     // ─────────────────────────────────────────────────────────
     // ViewHolder

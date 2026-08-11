@@ -47,7 +47,12 @@ import androidx.annotation.OptIn;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.preference.PreferenceManager;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import ml.docilealligator.infinityforreddit.adapters.ReelsAdapter;
+import ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity;
 import androidx.core.app.ActivityCompat;
+
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
@@ -622,7 +627,13 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                 if (!trackGroups.isEmpty()) {
                     binding.getVideoQualityButton().setVisibility(View.VISIBLE);
                     binding.getVideoQualityButton().setOnClickListener(view -> {
-
+                        int totalVideoTracks = 0;
+                        for (Tracks.Group g : trackGroups) {
+                            if (g.getType() == C.TRACK_TYPE_VIDEO) {
+                                totalVideoTracks += g.length;
+                            }
+                        }
+                        if (totalVideoTracks > 1) {
                             TrackSelectionDialogBuilder builder = new TrackSelectionDialogBuilder(ViewVideoActivity.this, getString(R.string.select_video_quality), player, C.TRACK_TYPE_VIDEO);
                             builder.setShowDisableOption(true);
                             builder.setAllowAdaptiveSelections(false);
@@ -633,7 +644,34 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                                 ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(mCustomThemeWrapper.getPrimaryTextColor());
                                 ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(mCustomThemeWrapper.getPrimaryTextColor());
                             }
-                        });
+                        } else {
+                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ViewVideoActivity.this);
+                            boolean currentHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
+                            String[] options = new String[]{"High Definition (HD)", "Standard Definition (SD)"};
+                            new MaterialAlertDialogBuilder(ViewVideoActivity.this)
+                                    .setTitle(R.string.select_video_quality)
+                                    .setSingleChoiceItems(options, currentHd ? 0 : 1, (d, which) -> {
+                                        boolean chooseHd = (which == 0);
+                                        sp.edit().putBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, chooseHd).apply();
+                                        d.dismiss();
+                                        if (mVideoUri != null) {
+                                            String currentUriStr = mVideoUri.toString();
+                                            String newUriStr = ReelsAdapter.getQualityAdjustedUrl(currentUriStr, chooseHd);
+                                            if (!newUriStr.equals(currentUriStr)) {
+                                                long currentPos = player.getCurrentPosition();
+                                                mVideoUri = Uri.parse(newUriStr);
+                                                player.setMediaSource(new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(mVideoUri)));
+                                                player.prepare();
+                                                player.seekTo(currentPos);
+                                                player.play();
+                                            }
+                                        }
+                                    })
+                                    .setNegativeButton(R.string.cancel, null)
+                                    .show();
+                        }
+                    });
+
 
                         if (!viewVideoViewModel.getSetDefaultResolutionAlready()) {
                             int desiredResolution = 0;

@@ -3112,8 +3112,12 @@ public class PostRecyclerViewAdapter extends PagingDataAdapter<Post, RecyclerVie
                             });
                 }
             } else {
-                bindVideoUri(Uri.parse(post.getVideoUrl()));
+                SharedPreferences sp = androidx.preference.PreferenceManager.getDefaultSharedPreferences(mContext);
+                boolean preferHd = sp.getBoolean(ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
+                String adjustedUrl = ml.docilealligator.infinityforreddit.adapters.ReelsAdapter.getQualityAdjustedUrl(post.getVideoUrl(), preferHd);
+                bindVideoUri(Uri.parse(adjustedUrl != null ? adjustedUrl : post.getVideoUrl()));
             }
+
         }
 
         void loadFallbackDirectVideo() {
