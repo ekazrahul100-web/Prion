@@ -660,7 +660,8 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                                         if (mVideoUri != null) {
                                             String currentUriStr = mVideoUri.toString();
                                             String newUriStr = ReelsAdapter.getQualityAdjustedUrl(currentUriStr, chooseHd);
-                                            if (!newUriStr.equals(currentUriStr)) {
+                                            if (newUriStr != null && !newUriStr.equals(currentUriStr)) {
+
                                                 long currentPos = player.getCurrentPosition();
                                                 mVideoUri = Uri.parse(newUriStr);
                                                 player.setMediaSource(new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(mVideoUri)));

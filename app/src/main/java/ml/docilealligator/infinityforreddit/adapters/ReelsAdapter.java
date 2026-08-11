@@ -273,11 +273,14 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     if (url == null || url.isEmpty()) {
                         url = post.getUrl();
                     }
-                    if (url == null || url.isEmpty()) continue;
-
                     SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean preferHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
-                    url = getQualityAdjustedUrl(url, preferHd);
+                    String adjustedUrl = getQualityAdjustedUrl(url, preferHd);
+                    if (adjustedUrl != null) {
+                        url = adjustedUrl;
+                    }
+
+
 
                     ExoPlayer player = new ExoPlayer.Builder(context).build();
                     player.setRepeatMode(Player.REPEAT_MODE_OFF);
