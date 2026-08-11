@@ -12,9 +12,18 @@ import androidx.appcompat.widget.Toolbar;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import android.widget.EditText;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.utils.NsfwCategoryManager;
+
 
 /**
  * Settings screen for Reels mode.
@@ -98,7 +107,136 @@ public class ReelsSettingsActivity extends BaseActivity {
         hideSeenSwitch.setChecked(mSharedPreferences.getBoolean(PREF_HIDE_SEEN_REELS, false));
         hideSeenSwitch.setOnCheckedChangeListener((btn, checked) ->
                 mSharedPreferences.edit().putBoolean(PREF_HIDE_SEEN_REELS, checked).apply());
+
+        // ── Manage Categories ─────────────────────────────────────────────
+        LinearLayout manageCategoriesContainer = findViewById(R.id.manage_categories_container);
+        manageCategoriesContainer.setOnClickListener(v -> showCategoryManagerMenu());
     }
+
+    private void showCategoryManagerMenu() {
+        String[] options = {"Create New Custom Category", "Edit Subreddits in Category", "Delete Custom Category"};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Manage NSFW Categories")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        showCreateCustomCategoryDialog();
+                    } else if (which == 1) {
+                        showSelectCategoryToEditDialog();
+                    } else if (which == 2) {
+                        showDeleteCustomCategoryDialog();
+                    }
+                })
+                .show();
+    }
+
+    private void showCreateCustomCategoryDialog() {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(48, 24, 48, 24);
+
+        final EditText nameInput = new EditText(this);
+        nameInput.setHint("Category Name (e.g. My Favorites)");
+        layout.addView(nameInput);
+
+        final EditText subsInput = new EditText(this);
+        subsInput.setHint("Subreddits (comma-separated, e.g. gonewild, RealGirls)");
+        layout.addView(subsInput);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Create Custom Category")
+                .setView(layout)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String name = nameInput.getText().toString().trim();
+                    String subsStr = subsInput.getText().toString().trim();
+                    if (!name.isEmpty() && !subsStr.isEmpty()) {
+                        String[] split = subsStr.split(",");
+                        List<String> list = new ArrayList<>();
+                        for (String s : split) {
+                            String trimmed = s.trim();
+                            if (!trimmed.isEmpty()) list.add(trimmed);
+                        }
+                        NsfwCategoryManager.saveCustomCategory(mSharedPreferences, name, list);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showSelectCategoryToEditDialog() {
+        Map<String, List<String>> map = NsfwCategoryManager.loadCategories(this, mSharedPreferences);
+        List<String> names = new ArrayList<>(map.keySet());
+        String[] items = names.toArray(new String[0]);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Select Category to Edit")
+                .setItems(items, (dialog, which) -> {
+                    String selectedName = items[which];
+                    List<String> currentSubs = map.get(selectedName);
+                    showEditSubredditsDialog(selectedName, currentSubs != null ? currentSubs : new ArrayList<>());
+                })
+                .show();
+    }
+
+    private void showEditSubredditsDialog(String categoryName, List<String> currentSubs) {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(48, 24, 48, 24);
+
+        final EditText subsInput = new EditText(this);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < currentSubs.size(); i++) {
+            sb.append(currentSubs.get(i));
+            if (i < currentSubs.size() - 1) sb.append(", ");
+        }
+        subsInput.setText(sb.toString());
+        subsInput.setHint("Subreddits (comma-separated)");
+        layout.addView(subsInput);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Edit Subreddits: " + categoryName)
+                .setView(layout)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String subsStr = subsInput.getText().toString().trim();
+                    String[] split = subsStr.split(",");
+                    List<String> list = new ArrayList<>();
+                    for (String s : split) {
+                        String trimmed = s.trim();
+                        if (!trimmed.isEmpty()) list.add(trimmed);
+                    }
+                    if (categoryName.startsWith("⭐ ")) {
+                        NsfwCategoryManager.saveCustomCategory(mSharedPreferences, categoryName.substring(2), list);
+                    } else {
+                        NsfwCategoryManager.saveCategoryOverride(mSharedPreferences, categoryName, list);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showDeleteCustomCategoryDialog() {
+        Map<String, List<String>> map = NsfwCategoryManager.loadCategories(this, mSharedPreferences);
+        List<String> customNames = new ArrayList<>();
+        for (String k : map.keySet()) {
+            if (k.startsWith("⭐ ")) customNames.add(k);
+        }
+        if (customNames.isEmpty()) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Delete Custom Category")
+                    .setMessage("No custom categories created yet.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
+        String[] items = customNames.toArray(new String[0]);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Select Custom Category to Delete")
+                .setItems(items, (dialog, which) -> {
+                    NsfwCategoryManager.deleteCustomCategory(mSharedPreferences, items[which]);
+                })
+                .show();
+    }
+
 
     private void updateLandscapeRadios(RadioButton defaultR, RadioButton autoRotateR,
                                         RadioButton fillInR, int mode) {

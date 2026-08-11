@@ -37,55 +37,90 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Left: SFW / Subscribed / NSFW dropdown -->
+        <!-- Left: SFW / Subscribed / NSFW dropdown + Category Tag selector -->
         <LinearLayout
-            android:id="@+id/mode_selector_container"
+            android:id="@+id/left_controls_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/sort_selector_container"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="?attr/selectableItemBackground"
-            android:padding="8dp">
+            android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/current_mode_text_view"
+            <LinearLayout
+                android:id="@+id/mode_selector_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SFW"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:padding="6dp">
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                <TextView
+                    android:id="@+id/current_mode_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SFW"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginStart="2dp"
+                    android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
+
+            <!-- Category selector container (visible when in NSFW mode) -->
+            <LinearLayout
+                android:id="@+id/category_selector_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackground"
+                android:padding="6dp">
+
+                <TextView
+                    android:id="@+id/category_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="All"
+                    android:textSize="13sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@android:color/white" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="2dp"
+                    android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
         </LinearLayout>
 
-
-        <!-- Category selector container (visible when in NSFW mode) -->
+        <!-- Center: sort type chip (e.g. "Hot ▾") -->
         <LinearLayout
-            android:id="@+id/category_selector_container"
+            android:id="@+id/sort_selector_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/mode_selector_container"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="4dp"
+            android:layout_centerInParent="true"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:visibility="gone"
             android:background="?attr/selectableItemBackground"
             android:padding="6dp">
 
             <TextView
-                android:id="@+id/category_text_view"
+                android:id="@+id/sort_type_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="All"
+                android:text="Hot"
                 android:textSize="14sp"
                 android:textColor="@android:color/white" />
 
@@ -97,35 +132,7 @@
                 app:tint="@android:color/white" />
         </LinearLayout>
 
-        <!-- Center: sort type chip (e.g. "Hot ▾") -->
-
-        <LinearLayout
-            android:id="@+id/sort_selector_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="?attr/selectableItemBackground"
-            android:padding="8dp">
-
-            <TextView
-                android:id="@+id/sort_type_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hot"
-                android:textSize="15sp"
-                android:textColor="@android:color/white" />
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="2dp"
-                android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
-        </LinearLayout>
-
-        <!-- Right: hide-seen toggle + refresh + settings -->
+        <!-- Right: refresh + settings -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -133,13 +140,6 @@
             android:layout_centerVertical="true"
             android:orientation="horizontal"
             android:gravity="center_vertical">
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/hide_seen_toggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:theme="@style/Widget.AppCompat.CompoundButton.Switch" />
 
             <ImageView
                 android:id="@+id/refresh_button"
@@ -155,12 +155,13 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:padding="4dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:src="@drawable/ic_settings_day_night_24dp"
                 app:tint="@android:color/white"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Reels Settings" />
         </LinearLayout>
+
     </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
