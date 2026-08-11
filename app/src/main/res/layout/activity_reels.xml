@@ -63,7 +63,9 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+                app:tint="@android:color/white" />
         </LinearLayout>
+
 
         <!-- Category selector container (visible when in NSFW mode) -->
         <LinearLayout
