@@ -269,16 +269,18 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             if (i >= 0 && i < posts.size()) {
                 if (!players.containsKey(i)) {
                     Post post = posts.get(i);
-                    String url = post.getVideoUrl();
-                    if (url == null || url.isEmpty()) {
-                        url = post.getUrl();
+                    String rawUrl = post.getVideoUrl();
+                    if (rawUrl == null || rawUrl.isEmpty()) {
+                        rawUrl = post.getUrl();
                     }
+                    if (rawUrl == null || rawUrl.isEmpty()) continue;
+
                     SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean preferHd = sp.getBoolean(ReelsSettingsActivity.PREF_QUALITY_HD, true);
-                    String adjustedUrl = getQualityAdjustedUrl(url, preferHd);
-                    if (adjustedUrl != null) {
-                        url = adjustedUrl;
-                    }
+                    String adjustedUrl = getQualityAdjustedUrl(rawUrl, preferHd);
+                    final String url = adjustedUrl != null ? adjustedUrl : rawUrl;
+
+
 
 
 
