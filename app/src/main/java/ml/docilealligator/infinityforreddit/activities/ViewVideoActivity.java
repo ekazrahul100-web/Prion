@@ -686,9 +686,9 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                             }
                             viewVideoViewModel.setSetDefaultResolutionAlready(true);
                         }
-                    }
 
                     for (Tracks.Group trackGroup : tracks.getGroups()) {
+
 
                         if (trackGroup.getType() == C.TRACK_TYPE_AUDIO) {
                             if ((viewVideoViewModel.getVideoType() == VIDEO_TYPE_NORMAL
