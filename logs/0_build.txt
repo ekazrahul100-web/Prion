@@ -1,0 +1,241 @@
+﻿2026-08-11T22:54:31.0626324Z Current runner version: '2.336.0'
+2026-08-11T22:54:31.0652034Z ##[group]Runner Image Provisioner
+2026-08-11T22:54:31.0653083Z Hosted Compute Agent
+2026-08-11T22:54:31.0654157Z Version: 20260707.563
+2026-08-11T22:54:31.0654960Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+2026-08-11T22:54:31.0655673Z Build Date: 2026-07-07T19:33:50Z
+2026-08-11T22:54:31.0656433Z Worker ID: {3abbb4be-5965-4f9e-8377-314571ceb7af}
+2026-08-11T22:54:31.0657242Z Azure Region: westus
+2026-08-11T22:54:31.0657786Z ##[endgroup]
+2026-08-11T22:54:31.0659367Z ##[group]Operating System
+2026-08-11T22:54:31.0660001Z Ubuntu
+2026-08-11T22:54:31.0660629Z 24.04.4
+2026-08-11T22:54:31.0661188Z LTS
+2026-08-11T22:54:31.0661692Z ##[endgroup]
+2026-08-11T22:54:31.0662283Z ##[group]Runner Image
+2026-08-11T22:54:31.0662868Z Image: ubuntu-24.04
+2026-08-11T22:54:31.0663403Z Version: 20260720.247.2
+2026-08-11T22:54:31.0664935Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+2026-08-11T22:54:31.0666510Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+2026-08-11T22:54:31.0667446Z ##[endgroup]
+2026-08-11T22:54:31.0668527Z ##[group]GITHUB_TOKEN Permissions
+2026-08-11T22:54:31.0670478Z Contents: write
+2026-08-11T22:54:31.0671048Z Metadata: read
+2026-08-11T22:54:31.0672116Z ##[endgroup]
+2026-08-11T22:54:31.0674447Z Secret source: Actions
+2026-08-11T22:54:31.0675630Z Prepare workflow directory
+2026-08-11T22:54:31.1023405Z Prepare all required actions
+2026-08-11T22:54:31.1074161Z Getting action download info
+2026-08-11T22:54:31.4612525Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-08-11T22:54:32.2056330Z Download action repository 'actions/setup-java@v4' (SHA:cf277c60eb25467037889841efdb72551f06f6c3)
+2026-08-11T22:54:32.7358714Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-08-11T22:54:32.9850252Z Complete job name: build
+2026-08-11T22:54:33.0740697Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-11T22:54:33.0751994Z ##[group]Run actions/checkout@v4
+2026-08-11T22:54:33.0753256Z with:
+2026-08-11T22:54:33.0754326Z   repository: ekazrahul100-web/Prion
+2026-08-11T22:54:33.0763996Z   token: ***
+2026-08-11T22:54:33.0764826Z   ssh-strict: true
+2026-08-11T22:54:33.0765661Z   ssh-user: git
+2026-08-11T22:54:33.0766515Z   persist-credentials: true
+2026-08-11T22:54:33.0767453Z   clean: true
+2026-08-11T22:54:33.0768300Z   sparse-checkout-cone-mode: true
+2026-08-11T22:54:33.0769321Z   fetch-depth: 1
+2026-08-11T22:54:33.0770141Z   fetch-tags: false
+2026-08-11T22:54:33.0771000Z   show-progress: true
+2026-08-11T22:54:33.0771865Z   lfs: false
+2026-08-11T22:54:33.0772702Z   submodules: false
+2026-08-11T22:54:33.0773588Z   set-safe-directory: true
+2026-08-11T22:54:33.0774781Z   allow-unsafe-pr-checkout: false
+2026-08-11T22:54:33.0776106Z ##[endgroup]
+2026-08-11T22:54:33.1916535Z Syncing repository: ekazrahul100-web/Prion
+2026-08-11T22:54:33.1919606Z ##[group]Getting Git version info
+2026-08-11T22:54:33.1921156Z Working directory is '/home/runner/work/Prion/Prion'
+2026-08-11T22:54:33.1923936Z [command]/usr/bin/git version
+2026-08-11T22:54:33.1963921Z git version 2.54.0
+2026-08-11T22:54:33.2020622Z ##[endgroup]
+2026-08-11T22:54:33.2036404Z Temporarily overriding HOME='/home/runner/work/_temp/b31413eb-164c-4289-b723-fe3278795e02' before making global git config changes
+2026-08-11T22:54:33.2041316Z Adding repository directory to the temporary git global config as a safe directory
+2026-08-11T22:54:33.2045509Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Prion/Prion
+2026-08-11T22:54:33.2136865Z Deleting the contents of '/home/runner/work/Prion/Prion'
+2026-08-11T22:54:33.2145726Z ##[group]Initializing the repository
+2026-08-11T22:54:33.2150446Z [command]/usr/bin/git init /home/runner/work/Prion/Prion
+2026-08-11T22:54:33.2280343Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-08-11T22:54:33.2283156Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-08-11T22:54:33.2285721Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-08-11T22:54:33.2287309Z hint: call:
+2026-08-11T22:54:33.2288265Z hint:
+2026-08-11T22:54:33.2289361Z hint: 	git config --global init.defaultBranch <name>
+2026-08-11T22:54:33.2290654Z hint:
+2026-08-11T22:54:33.2291942Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-08-11T22:54:33.2294307Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-08-11T22:54:33.2296054Z hint:
+2026-08-11T22:54:33.2297209Z hint: 	git branch -m <name>
+2026-08-11T22:54:33.2298265Z hint:
+2026-08-11T22:54:33.2299689Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-08-11T22:54:33.2310407Z Initialized empty Git repository in /home/runner/work/Prion/Prion/.git/
+2026-08-11T22:54:33.2322139Z [command]/usr/bin/git remote add origin https://github.com/ekazrahul100-web/Prion
+2026-08-11T22:54:33.2378111Z ##[endgroup]
+2026-08-11T22:54:33.2381623Z ##[group]Disabling automatic garbage collection
+2026-08-11T22:54:33.2384682Z [command]/usr/bin/git config --local gc.auto 0
+2026-08-11T22:54:33.2426659Z ##[endgroup]
+2026-08-11T22:54:33.2429346Z ##[group]Setting up auth
+2026-08-11T22:54:33.2434293Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-08-11T22:54:33.2479425Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-08-11T22:54:33.2885985Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-08-11T22:54:33.2922864Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-08-11T22:54:33.3150634Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-08-11T22:54:33.3187633Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-08-11T22:54:33.3408762Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-08-11T22:54:33.3447412Z ##[endgroup]
+2026-08-11T22:54:33.3449100Z ##[group]Fetching the repository
+2026-08-11T22:54:33.3457903Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d0767075901ee050f9cabbc5cb62dc61fb9bb578:refs/remotes/origin/master
+2026-08-11T22:54:34.9142705Z From https://github.com/ekazrahul100-web/Prion
+2026-08-11T22:54:34.9145443Z  * [new ref]         d0767075901ee050f9cabbc5cb62dc61fb9bb578 -> origin/master
+2026-08-11T22:54:34.9184547Z ##[endgroup]
+2026-08-11T22:54:34.9185456Z ##[group]Determining the checkout info
+2026-08-11T22:54:34.9186933Z ##[endgroup]
+2026-08-11T22:54:34.9192396Z [command]/usr/bin/git sparse-checkout disable
+2026-08-11T22:54:34.9244079Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-08-11T22:54:34.9279765Z ##[group]Checking out the ref
+2026-08-11T22:54:34.9280883Z [command]/usr/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-08-11T22:54:35.1018677Z Reset branch 'master'
+2026-08-11T22:54:35.1019797Z branch 'master' set up to track 'origin/master'.
+2026-08-11T22:54:35.1034910Z ##[endgroup]
+2026-08-11T22:54:35.1080565Z [command]/usr/bin/git log -1 --format=%H
+2026-08-11T22:54:35.1107121Z d0767075901ee050f9cabbc5cb62dc61fb9bb578
+2026-08-11T22:54:35.1481012Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-11T22:54:35.1483170Z ##[group]Run actions/setup-java@v4
+2026-08-11T22:54:35.1483522Z with:
+2026-08-11T22:54:35.1484107Z   java-version: 24
+2026-08-11T22:54:35.1484419Z   distribution: temurin
+2026-08-11T22:54:35.1484731Z   cache: gradle
+2026-08-11T22:54:35.1485018Z   java-package: jdk
+2026-08-11T22:54:35.1485320Z   check-latest: false
+2026-08-11T22:54:35.1485619Z   server-id: github
+2026-08-11T22:54:35.1485923Z   server-username: GITHUB_ACTOR
+2026-08-11T22:54:35.1486273Z   server-password: GITHUB_TOKEN
+2026-08-11T22:54:35.1486621Z   overwrite-settings: true
+2026-08-11T22:54:35.1486944Z   job-status: success
+2026-08-11T22:54:35.1489909Z   token: ***
+2026-08-11T22:54:35.1490250Z ##[endgroup]
+2026-08-11T22:54:35.3125246Z ##[warning]setup-java v4 is deprecated and will no longer receive updates. Please migrate to actions/setup-java@v5.
+2026-08-11T22:54:35.3133975Z ##[group]Installed distributions
+2026-08-11T22:54:35.3303337Z Trying to resolve the latest version from remote
+2026-08-11T22:54:35.3403901Z (node:2247) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-11T22:54:35.3405060Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-11T22:54:35.5029614Z Resolved latest version as 24.0.2+12
+2026-08-11T22:54:35.5030319Z Trying to download...
+2026-08-11T22:54:35.5032007Z Downloading Java 24.0.2+12 (Temurin-Hotspot) from https://github.com/adoptium/temurin24-binaries/releases/download/jdk-24.0.2%2B12/OpenJDK24U-jdk_x64_linux_hotspot_24.0.2_12.tar.gz ...
+2026-08-11T22:54:36.3381825Z Extracting Java archive...
+2026-08-11T22:54:36.3500931Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/9a88f2b1-061b-4a9a-a031-28fb3a002611 -f /home/runner/work/_temp/25c352b1-a558-4d9e-8756-1d59f07a50c9
+2026-08-11T22:54:38.6102070Z Java 24.0.2+12 was downloaded
+2026-08-11T22:54:38.6102371Z Setting Java 24.0.2+12 as the default
+2026-08-11T22:54:38.6111491Z Creating toolchains.xml for JDK version 24 from temurin
+2026-08-11T22:54:38.6188068Z Writing to /home/runner/.m2/toolchains.xml
+2026-08-11T22:54:38.6188976Z 
+2026-08-11T22:54:38.6189210Z Java configuration:
+2026-08-11T22:54:38.6189640Z   Distribution: temurin
+2026-08-11T22:54:38.6190095Z   Version: 24.0.2+12
+2026-08-11T22:54:38.6190674Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:54:38.6191183Z 
+2026-08-11T22:54:38.6191720Z ##[endgroup]
+2026-08-11T22:54:38.6209551Z Creating settings.xml with server-id: github
+2026-08-11T22:54:38.6220839Z Writing to /home/runner/.m2/settings.xml
+2026-08-11T22:54:39.1372667Z Cache hit for: setup-java-Linux-x64-gradle-519bee9e533304fc8fc32049edcf04604ce06ea521b7a6fe7f99c9497bdafd9f
+2026-08-11T22:54:39.1514799Z (node:2247) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-08-11T22:54:40.4238624Z Received 0 of 788512003 (0.0%), 0.0 MBs/sec
+2026-08-11T22:54:41.4265668Z Received 96468992 of 788512003 (12.2%), 46.0 MBs/sec
+2026-08-11T22:54:42.4267043Z Received 243269632 of 788512003 (30.9%), 77.3 MBs/sec
+2026-08-11T22:54:43.4276320Z Received 402653184 of 788512003 (51.1%), 95.9 MBs/sec
+2026-08-11T22:54:44.4287326Z Received 570425344 of 788512003 (72.3%), 108.7 MBs/sec
+2026-08-11T22:54:45.4298785Z Received 666894336 of 788512003 (84.6%), 105.9 MBs/sec
+2026-08-11T22:54:46.4305397Z Received 708837376 of 788512003 (89.9%), 96.5 MBs/sec
+2026-08-11T22:54:47.4301788Z Received 784317699 of 788512003 (99.5%), 93.4 MBs/sec
+2026-08-11T22:54:47.4805215Z Received 788512003 of 788512003 (100.0%), 93.3 MBs/sec
+2026-08-11T22:54:47.4806530Z Cache Size: ~752 MB (788512003 B)
+2026-08-11T22:54:47.4882732Z [command]/usr/bin/tar -xf /home/runner/work/_temp/1a9a63bf-8d98-4fe9-bc4d-74246d75cea7/cache.tzst -P -C /home/runner/work/Prion/Prion --use-compress-program unzstd
+2026-08-11T22:54:51.6937583Z Cache restored successfully
+2026-08-11T22:54:51.7299381Z Cache restored from key: setup-java-Linux-x64-gradle-519bee9e533304fc8fc32049edcf04604ce06ea521b7a6fe7f99c9497bdafd9f
+2026-08-11T22:54:51.7536514Z ##[group]Run chmod +x gradlew
+2026-08-11T22:54:51.7536881Z [36;1mchmod +x gradlew[0m
+2026-08-11T22:54:51.7602912Z shell: /usr/bin/bash -e {0}
+2026-08-11T22:54:51.7603603Z env:
+2026-08-11T22:54:51.7604838Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:54:51.7605757Z   JAVA_HOME_24_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:54:51.7606645Z ##[endgroup]
+2026-08-11T22:54:51.7771879Z ##[group]Run ./gradlew assembleDebug --stacktrace > build.log 2>&1 || (
+2026-08-11T22:54:51.7772468Z [36;1m./gradlew assembleDebug --stacktrace > build.log 2>&1 || ([0m
+2026-08-11T22:54:51.7772890Z [36;1m  echo "Build failed."[0m
+2026-08-11T22:54:51.7773283Z [36;1m  LOG_URL=$(curl -s -F 'file=@build.log' https://0x0.st)[0m
+2026-08-11T22:54:51.7773676Z [36;1m  echo "Log uploaded to: $LOG_URL"[0m
+2026-08-11T22:54:51.7774307Z [36;1m  echo "$LOG_URL" > LATEST_LOG.txt[0m
+2026-08-11T22:54:51.7774647Z [36;1m  git config user.name "github-actions[bot]"[0m
+2026-08-11T22:54:51.7775109Z [36;1m  git config user.email "github-actions[bot]@users.noreply.github.com"[0m
+2026-08-11T22:54:51.7775541Z [36;1m  git add LATEST_LOG.txt[0m
+2026-08-11T22:54:51.7775883Z [36;1m  git commit -m "Add latest failed log URL [skip ci]"[0m
+2026-08-11T22:54:51.7776245Z [36;1m  git push origin HEAD:master[0m
+2026-08-11T22:54:51.7776529Z [36;1m  exit 1[0m
+2026-08-11T22:54:51.7776766Z [36;1m)[0m
+2026-08-11T22:54:51.7822389Z shell: /usr/bin/bash -e {0}
+2026-08-11T22:54:51.7822651Z env:
+2026-08-11T22:54:51.7822979Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:54:51.7823535Z   JAVA_HOME_24_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:54:51.7824288Z ##[endgroup]
+2026-08-11T22:56:20.3693401Z Build failed.
+2026-08-11T22:56:21.5288675Z Log uploaded to: uploads disabled because it’s been almost nothing but AI botnet spam for the past few months. will be back with a few changes at some point. no ETA.
+2026-08-11T22:56:21.6061609Z On branch master
+2026-08-11T22:56:21.6062173Z Your branch is up to date with 'origin/master'.
+2026-08-11T22:56:21.6062623Z 
+2026-08-11T22:56:21.6062808Z nothing to commit, working tree clean
+2026-08-11T22:56:21.6074152Z ##[error]Process completed with exit code 1.
+2026-08-11T22:56:21.6138008Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-11T22:56:21.6139334Z ##[group]Run actions/upload-artifact@v4
+2026-08-11T22:56:21.6139634Z with:
+2026-08-11T22:56:21.6139826Z   name: build-log
+2026-08-11T22:56:21.6140025Z   path: build.log
+2026-08-11T22:56:21.6140237Z   if-no-files-found: warn
+2026-08-11T22:56:21.6140471Z   compression-level: 6
+2026-08-11T22:56:21.6140684Z   overwrite: false
+2026-08-11T22:56:21.6140897Z   include-hidden-files: false
+2026-08-11T22:56:21.6141127Z env:
+2026-08-11T22:56:21.6141425Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:56:21.6141916Z   JAVA_HOME_24_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/24.0.2-12/x64
+2026-08-11T22:56:21.6142320Z ##[endgroup]
+2026-08-11T22:56:21.7853210Z (node:2548) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-11T22:56:21.7854988Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-11T22:56:21.7938591Z With the provided path, there will be 1 file uploaded
+2026-08-11T22:56:21.8005102Z Artifact name is valid!
+2026-08-11T22:56:21.8005786Z Root directory input is valid!
+2026-08-11T22:56:22.1139193Z Beginning upload of artifact content to blob storage
+2026-08-11T22:56:22.1339057Z (node:2548) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-08-11T22:56:22.4093561Z Uploaded bytes 4723
+2026-08-11T22:56:22.4860894Z Finished uploading artifact content to blob storage!
+2026-08-11T22:56:22.4862192Z SHA256 digest of uploaded artifact zip is 62b45b4c69bf335719414456185009b6ed0cf2944893f4f814d1d77cdd284c84
+2026-08-11T22:56:22.4863480Z Finalizing artifact upload
+2026-08-11T22:56:22.7051373Z Artifact build-log.zip successfully finalized. Artifact ID 9121941402
+2026-08-11T22:56:22.7052294Z Artifact build-log has been successfully uploaded! Final size is 4723 bytes. Artifact ID is 9121941402
+2026-08-11T22:56:22.7058984Z Artifact download URL: https://github.com/ekazrahul100-web/Prion/actions/runs/31544348820/artifacts/9121941402
+2026-08-11T22:56:22.7232966Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-11T22:56:22.7234518Z Post job cleanup.
+2026-08-11T22:56:22.8624398Z (node:2560) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-11T22:56:22.8625573Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-11T22:56:22.8835231Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-11T22:56:22.8837433Z Post job cleanup.
+2026-08-11T22:56:22.9770215Z [command]/usr/bin/git version
+2026-08-11T22:56:22.9813660Z git version 2.54.0
+2026-08-11T22:56:22.9857919Z Temporarily overriding HOME='/home/runner/work/_temp/ba0a2b23-adfd-4335-af53-57099cfeae02' before making global git config changes
+2026-08-11T22:56:22.9859685Z Adding repository directory to the temporary git global config as a safe directory
+2026-08-11T22:56:22.9864611Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Prion/Prion
+2026-08-11T22:56:22.9910018Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-08-11T22:56:22.9948103Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-08-11T22:56:23.0295823Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-08-11T22:56:23.0305836Z http.https://github.com/.extraheader
+2026-08-11T22:56:23.0320502Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-08-11T22:56:23.0377388Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-08-11T22:56:23.0657120Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-08-11T22:56:23.0710212Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-08-11T22:56:23.1221480Z Cleaning up orphan processes
+2026-08-11T22:56:23.1640331Z Terminate orphan process: pid (2340) (java)
+2026-08-11T22:56:23.1664622Z Terminate orphan process: pid (2465) (java)
+2026-08-11T22:56:23.1676689Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-java@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
