@@ -25,7 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Top overlay: mode selector (left) | sort chip (center) | controls (right) -->
+    <!-- Top overlay: mode selector | category pill | sort chip | controls -->
     <RelativeLayout
         android:id="@+id/top_overlay_container"
         android:layout_width="match_parent"
@@ -38,17 +38,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Left: SFW / Subscribed / NSFW dropdown + Category Tag selector -->
+        <!-- Left: SFW / Subscribed / NSFW dropdown + Category Tag selector + Sort chip -->
         <LinearLayout
             android:id="@+id/left_controls_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_toStartOf="@id/sort_selector_container"
+            android:layout_toStartOf="@id/right_controls_container"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
+            <!-- Mode selector -->
             <LinearLayout
                 android:id="@+id/mode_selector_container"
                 android:layout_width="wrap_content"
@@ -80,15 +81,15 @@
                 android:id="@+id/category_selector_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="14dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:visibility="gone"
                 android:background="@drawable/rounded_edit_text_background"
-                android:paddingStart="8dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp">
+                android:paddingStart="10dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
 
                 <TextView
                     android:id="@+id/category_text_view"
@@ -103,41 +104,42 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
+                    android:layout_marginStart="4dp"
+                    android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
+
+            <!-- Sort type chip (e.g. "Hot ▾") -->
+            <LinearLayout
+                android:id="@+id/sort_selector_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:padding="6dp">
+
+                <TextView
+                    android:id="@+id/sort_type_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hot"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/white" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:layout_marginStart="2dp"
                     android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
                     app:tint="@android:color/white" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Center: sort type chip (e.g. "Hot ▾") -->
-        <LinearLayout
-            android:id="@+id/sort_selector_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="?attr/selectableItemBackground"
-            android:padding="6dp">
-
-            <TextView
-                android:id="@+id/sort_type_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hot"
-                android:textSize="14sp"
-                android:textColor="@android:color/white" />
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="2dp"
-                android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
-        </LinearLayout>
-
         <!-- Right: refresh + settings -->
         <LinearLayout
+            android:id="@+id/right_controls_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -166,6 +168,7 @@
                 android:contentDescription="Reels Settings" />
         </LinearLayout>
     </RelativeLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

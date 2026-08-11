@@ -191,6 +191,11 @@ public class ReelsActivity extends BaseActivity {
             "WatchPeopleDieInside", "AnimalsBeingDerps", "oddlysatisfying"
     };
 
+    // ── Category Deck & Cooldown Memory (Option A) ────────────────────────
+    private final List<String> currentCategoryDeck = new ArrayList<>();
+    private final LinkedHashSet<String> categoryCooldownSet = new LinkedHashSet<>();
+    @Nullable private String activeCategoryKey = null;
+
     // ─────────────────────────────────────────────────────────────────────
     // onCreate
     // ─────────────────────────────────────────────────────────────────────
@@ -217,11 +222,20 @@ public class ReelsActivity extends BaseActivity {
         if (topOverlay != null) {
             ViewCompat.setOnApplyWindowInsetsListener(topOverlay, (v, insets) -> {
                 int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                int topPadding = Math.max(statusBarHeight + 16, 52);
+                if (statusBarHeight <= 0) {
+                    int resourceId = v.getResources().getIdentifier("status_bar_height", "dimen", "android");
+                    if (resourceId > 0) {
+                        statusBarHeight = v.getResources().getDimensionPixelSize(resourceId);
+                    }
+                }
+                int extraPaddingPx = (int) (16 * v.getResources().getDisplayMetrics().density);
+                int topPadding = statusBarHeight + extraPaddingPx;
                 v.setPadding(v.getPaddingLeft(), topPadding, v.getPaddingRight(), v.getPaddingBottom());
                 return insets;
             });
+            ViewCompat.requestApplyInsets(topOverlay);
         }
+
 
         categorySelectorContainer.setOnClickListener(v -> showCategoryPopup());
 
@@ -677,36 +691,66 @@ public class ReelsActivity extends BaseActivity {
         final String subreddit;
 
         if (lockedSubreddit != null) {
-            // Subreddit immersive mode — always use this subreddit
             subreddit = lockedSubreddit;
         } else if (!fetchSubscribed) {
             List<String> pool = new ArrayList<>();
             if (currentMode == MODE_NSFW) {
                 Map<String, List<String>> categoriesMap = NsfwCategoryManager.loadCategories(this, mSharedPreferences);
                 String selectedCategory = mSharedPreferences.getString(NsfwCategoryManager.PREF_SELECTED_CATEGORY_NAME, "All NSFW");
-                List<String> categorySubs;
-                if (selectedCategory == null || selectedCategory.equals("All NSFW") || !categoriesMap.containsKey(selectedCategory)) {
-                    categorySubs = NsfwCategoryManager.getAllSubreddits(categoriesMap);
-                } else {
+                if (selectedCategory == null) selectedCategory = "All NSFW";
 
-                    categorySubs = categoriesMap.get(selectedCategory);
+                // Re-initialize category deck if category changed or deck is empty
+                if (!selectedCategory.equals(activeCategoryKey) || currentCategoryDeck.isEmpty()) {
+                    activeCategoryKey = selectedCategory;
+                    currentCategoryDeck.clear();
+                    categoryCooldownSet.clear();
+
+                    List<String> subs;
+                    if (selectedCategory.equals("All NSFW") || !categoriesMap.containsKey(selectedCategory)) {
+                        subs = NsfwCategoryManager.getAllSubreddits(categoriesMap);
+                    } else {
+                        subs = categoriesMap.get(selectedCategory);
+                    }
+                    if (subs != null && !subs.isEmpty()) {
+                        currentCategoryDeck.addAll(subs);
+                    } else {
+                        Collections.addAll(currentCategoryDeck, NSFW_POOL);
+                    }
+                    Collections.shuffle(currentCategoryDeck);
                 }
-                if (categorySubs != null && !categorySubs.isEmpty()) {
-                    pool.addAll(categorySubs);
-                } else {
-                    Collections.addAll(pool, NSFW_POOL);
+
+                // Pick subreddits not in cooldown
+                List<String> available = new ArrayList<>();
+                for (String sub : currentCategoryDeck) {
+                    if (!categoryCooldownSet.contains(sub)) {
+                        available.add(sub);
+                    }
                 }
+
+                // If cooldown set has consumed most subreddits, reset cooldown for a new round
+                if (available.size() < 6 && currentCategoryDeck.size() >= 6) {
+                    categoryCooldownSet.clear();
+                    available.clear();
+                    available.addAll(currentCategoryDeck);
+                    Collections.shuffle(available);
+                } else if (available.isEmpty()) {
+                    available.addAll(currentCategoryDeck);
+                    Collections.shuffle(available);
+                }
+
+                int batchSize = Math.min(6, available.size());
+                List<String> chosenBatch = available.subList(0, batchSize);
+                categoryCooldownSet.addAll(chosenBatch);
+                pool.addAll(chosenBatch);
             } else {
                 Collections.addAll(pool, SFW_POOL);
+                Collections.shuffle(pool);
             }
 
-
-            Collections.shuffle(pool);
-            int take = Math.min(20, pool.size());
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < take; i++) {
+            for (int i = 0; i < pool.size(); i++) {
                 sb.append(pool.get(i));
-                if (i < take - 1) sb.append("+");
+                if (i < pool.size() - 1) sb.append("+");
             }
             subreddit = sb.toString();
         } else {
@@ -730,7 +774,6 @@ public class ReelsActivity extends BaseActivity {
         final int capturedMode         = currentMode;
         final SortType.Type sortType   = currentSortType;
         final SortType.Time sortTime   = currentSortTime;
-        // Capture before the background thread so we know if this is the first batch
         final int countBeforeAdd       = getCurrentAdapter().getItemCount();
 
         mExecutor.execute(() -> {
@@ -749,9 +792,8 @@ public class ReelsActivity extends BaseActivity {
                             finalSubreddit, sortType, sortTime, currentAfter, 100,
                             APIUtils.getOAuthHeader(accessToken)).get();
                 } else {
-                    response = api.getAnonymousFrontPageOrMultiredditPostsListenableFuture(
-                            finalSubreddit, sortType, sortTime, currentAfter, 100,
-                            APIUtils.getUserAgent(ReelsActivity.this)).get();
+                    response = api.getSubredditBestPostsListenableFuture(
+                            finalSubreddit, sortType, sortTime, currentAfter, 100).get();
                 }
 
                 if (response != null && response.isSuccessful() && response.body() != null) {
@@ -804,20 +846,22 @@ public class ReelsActivity extends BaseActivity {
                         }
                     }
 
+                    List<Post> interleaved = interleavePostsBySubreddit(videos);
                     new Handler(Looper.getMainLooper()).post(() -> {
                         ReelsAdapter currentAdapter = getCurrentAdapter();
-                        currentAdapter.addPosts(videos);
+                        currentAdapter.addPosts(interleaved);
                         isLoading = false;
                         progressBar.setVisibility(View.GONE);
 
-                        if (videos.isEmpty() && newAfter != null) {
+                        if (interleaved.isEmpty() && newAfter != null) {
                             // No matching videos on this page — fetch the next page
                             fetchVideos();
-                        } else if (countBeforeAdd == 0 && !videos.isEmpty()) {
+                        } else if (countBeforeAdd == 0 && !interleaved.isEmpty()) {
                             // First batch — kick off playback at position 0
                             currentAdapter.playVideoAt(0);
                         }
                     });
+
                 } else {
                     new Handler(Looper.getMainLooper()).post(() -> {
                         isLoading = false;
@@ -834,9 +878,35 @@ public class ReelsActivity extends BaseActivity {
         });
     }
 
+    private List<Post> interleavePostsBySubreddit(List<Post> posts) {
+        if (posts == null || posts.size() <= 1) return posts != null ? posts : new ArrayList<>();
+
+        Map<String, List<Post>> subMap = new LinkedHashMap<>();
+        for (Post p : posts) {
+            String sub = p.getSubredditName() != null ? p.getSubredditName().toLowerCase() : "unknown";
+            if (!subMap.containsKey(sub)) subMap.put(sub, new ArrayList<>());
+            List<Post> list = subMap.get(sub);
+            if (list != null) list.add(p);
+        }
+
+        List<Post> result = new ArrayList<>();
+        boolean addedAny = true;
+        while (addedAny) {
+            addedAny = false;
+            for (List<Post> subList : subMap.values()) {
+                if (!subList.isEmpty()) {
+                    result.add(subList.remove(0));
+                    addedAny = true;
+                }
+            }
+        }
+        return result;
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // Lifecycle
     // ─────────────────────────────────────────────────────────────────────
+
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
