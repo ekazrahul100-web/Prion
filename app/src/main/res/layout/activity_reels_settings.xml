@@ -29,7 +29,8 @@
             android:text="LANDSCAPE VIDEO MODE"
             android:textSize="11sp"
             android:letterSpacing="0.12"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccent"
+
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="24dp"
@@ -181,7 +182,8 @@
             android:text="PLAYBACK"
             android:textSize="11sp"
             android:letterSpacing="0.12"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccent"
+
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="16dp"
@@ -241,7 +243,8 @@
             android:text="VIDEO QUALITY"
             android:textSize="11sp"
             android:letterSpacing="0.12"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccent"
+
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="16dp"
@@ -301,7 +304,8 @@
             android:text="CONTENT"
             android:textSize="11sp"
             android:letterSpacing="0.12"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorAccent"
+
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="16dp"

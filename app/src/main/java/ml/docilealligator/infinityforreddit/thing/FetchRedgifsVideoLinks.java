@@ -84,7 +84,7 @@ public class FetchRedgifsVideoLinks {
                             redgifsId, APIUtils.USER_AGENT)
                     .execute();
             if (response.isSuccessful()) {
-                return parseRedgifsVideoLinks(response.body());
+                return parseRedgifsVideoLinks(response.body(), currentAccountSharedPreferences);
             } else if (response.code() == 401) {
                 // Token expired, try once more with new token
                 accessToken = refreshAccessToken(redgifsRetrofit, currentAccountSharedPreferences);
@@ -96,9 +96,10 @@ public class FetchRedgifsVideoLinks {
                                     redgifsId, APIUtils.USER_AGENT)
                             .execute();
                     if (response.isSuccessful()) {
-                        return parseRedgifsVideoLinks(response.body());
+                        return parseRedgifsVideoLinks(response.body(), currentAccountSharedPreferences);
                     }
                 }
+
                 return null;
             } else {
                 return null;
@@ -148,15 +149,19 @@ public class FetchRedgifsVideoLinks {
         try {
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject gif = jsonResponse.getJSONObject(JSONUtils.GIF_KEY);
-            JSONObject urls = gif.getJSONObject(JSONUtils.URLS_KEY);
+            boolean preferHd = currentAccountSharedPreferences.getBoolean(
+                    ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
 
-            // Try HD first, fall back to SD if not available
-            String mp4;
-            if (urls.has(JSONUtils.HD_KEY)) {
+            String mp4 = null;
+            if (!preferHd && urls.has("sd")) {
+                mp4 = urls.getString("sd");
+            } else if (urls.has(JSONUtils.HD_KEY)) {
                 mp4 = urls.getString(JSONUtils.HD_KEY);
             } else if (urls.has("sd")) {
                 mp4 = urls.getString("sd");
-            } else {
+            }
+
+            if (mp4 == null) {
                 handler.post(() -> fetchVideoLinkListener.failed(null));
                 return;
             }
@@ -173,14 +178,18 @@ public class FetchRedgifsVideoLinks {
     }
 
     @Nullable
-    private static String parseRedgifsVideoLinks(@Nullable String response) {
+    private static String parseRedgifsVideoLinks(@Nullable String response, SharedPreferences currentAccountSharedPreferences) {
         try {
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject gif = jsonResponse.getJSONObject(JSONUtils.GIF_KEY);
             JSONObject urls = gif.getJSONObject(JSONUtils.URLS_KEY);
 
-            // Try HD first, fall back to SD if not available
-            if (urls.has(JSONUtils.HD_KEY)) {
+            boolean preferHd = currentAccountSharedPreferences.getBoolean(
+                    ml.docilealligator.infinityforreddit.activities.ReelsSettingsActivity.PREF_QUALITY_HD, true);
+
+            if (!preferHd && urls.has("sd")) {
+                return urls.getString("sd");
+            } else if (urls.has(JSONUtils.HD_KEY)) {
                 return urls.getString(JSONUtils.HD_KEY);
             } else if (urls.has("sd")) {
                 return urls.getString("sd");
@@ -192,6 +201,7 @@ public class FetchRedgifsVideoLinks {
             return null;
         }
     }
+
 
     private static String getValidAccessToken(Retrofit redgifsRetrofit, SharedPreferences currentAccountSharedPreferences) {
         // Check if existing token is valid

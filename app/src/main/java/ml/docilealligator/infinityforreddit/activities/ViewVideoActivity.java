@@ -620,10 +620,9 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
             public void onTracksChanged(@NonNull Tracks tracks) {
                 ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
                 if (!trackGroups.isEmpty()) {
-                    if (viewVideoViewModel.getVideoType() == VIDEO_TYPE_NORMAL
-                            || viewVideoViewModel.getVideoType() == VIDEO_TYPE_MARKDOWN_PARSED) {
-                        binding.getVideoQualityButton().setVisibility(View.VISIBLE);
-                        binding.getVideoQualityButton().setOnClickListener(view -> {
+                    binding.getVideoQualityButton().setVisibility(View.VISIBLE);
+                    binding.getVideoQualityButton().setOnClickListener(view -> {
+
                             TrackSelectionDialogBuilder builder = new TrackSelectionDialogBuilder(ViewVideoActivity.this, getString(R.string.select_video_quality), player, C.TRACK_TYPE_VIDEO);
                             builder.setShowDisableOption(true);
                             builder.setAllowAdaptiveSelections(false);
@@ -690,6 +689,7 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                     }
 
                     for (Tracks.Group trackGroup : tracks.getGroups()) {
+
                         if (trackGroup.getType() == C.TRACK_TYPE_AUDIO) {
                             if ((viewVideoViewModel.getVideoType() == VIDEO_TYPE_NORMAL
                                     || viewVideoViewModel.getVideoType() == VIDEO_TYPE_MARKDOWN_PARSED) && trackGroup.length > 1) {

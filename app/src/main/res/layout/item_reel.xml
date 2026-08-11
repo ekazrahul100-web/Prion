@@ -110,8 +110,38 @@
             android:padding="8dp"
             android:src="@drawable/ic_share_grey_24dp"
             app:tint="@android:color/white"
+            android:layout_marginBottom="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <!-- HD/SD Quality toggle button -->
+        <TextView
+            android:id="@+id/quality_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HD"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/exo_player_control_button_circular_background"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Mute toggle button -->
+        <ImageView
+            android:id="@+id/mute_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_unmute_24dp"
+            app:tint="@android:color/white"
             android:background="?attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
+
 
     <!-- Bottom-left: subreddit name + post title + "View post" tap target -->
     <LinearLayout
@@ -173,42 +203,9 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- HD/SD Quality toggle button -->
-    <TextView
-        android:id="@+id/quality_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="HD"
-        android:textColor="@android:color/white"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/exo_player_control_button_circular_background"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintTop_toTopOf="@id/mute_button"
-        app:layout_constraintBottom_toBottomOf="@id/mute_button"
-        app:layout_constraintEnd_toStartOf="@id/mute_button" />
-
-    <!-- Mute toggle button (above action buttons) -->
-    <ImageView
-        android:id="@+id/mute_button"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:padding="4dp"
-        android:src="@drawable/ic_unmute_24dp"
-        app:tint="@android:color/white"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintBottom_toTopOf="@id/actions_container"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Progress seekbar at the very bottom -->
+
     <SeekBar
         android:id="@+id/seek_bar"
         android:layout_width="match_parent"
