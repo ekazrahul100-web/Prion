@@ -333,7 +333,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         }
     }
 
-    public static String getQualityAdjustedUrl(String url, boolean preferHd) {
+    @Nullable
+    public static String getQualityAdjustedUrl(@Nullable String url, boolean preferHd) {
+
         if (url == null) return null;
         if (!preferHd) {
             if (url.contains("-hd.mp4")) {

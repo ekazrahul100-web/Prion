@@ -166,7 +166,9 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
     @Nullable
     public Typeface typeface;
 
+    @Nullable
     private Uri mVideoUri;
+
 
     private ExoPlayer player;
     @UnstableApi
