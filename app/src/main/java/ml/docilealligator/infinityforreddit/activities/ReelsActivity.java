@@ -3,6 +3,18 @@ package ml.docilealligator.infinityforreddit.activities;
 import java.util.Map;
 
 import android.content.Intent;
+
+import ml.docilealligator.infinityforreddit.customviews.NavigationWrapper;
+import ml.docilealligator.infinityforreddit.activities.InboxActivity;
+import ml.docilealligator.infinityforreddit.activities.SearchActivity;
+import ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity;
+import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
+import ml.docilealligator.infinityforreddit.activities.AccountPostsActivity;
+import ml.docilealligator.infinityforreddit.activities.AccountSavedThingActivity;
+import ml.docilealligator.infinityforreddit.events.ShowThumbnailOnTheLeftInCompactLayoutEvent;
+import org.greenrobot.eventbus.EventBus;
+import ml.docilealligator.infinityforreddit.post.PostPagingSource;
+
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -935,4 +947,112 @@ public class ReelsActivity extends BaseActivity {
     protected void applyCustomTheme() {
         // Fullscreen immersive — no theme chrome needed
     }
+    private int getBottomAppBarOptionDrawableResource(int option) {
+        switch (option) {
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS: return R.drawable.ic_subscriptions_bottom_app_bar_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_MULTIREDDITS: return R.drawable.ic_multi_reddit_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REELS: return R.drawable.ic_video_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_INBOX: return R.drawable.ic_inbox_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_PROFILE: return R.drawable.ic_account_circle_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBMIT_POSTS: return R.drawable.ic_add_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH: return R.drawable.ic_refresh_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_CHANGE_SORT_TYPE: return R.drawable.ic_sort_toolbar_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_CHANGE_POST_LAYOUT: return R.drawable.ic_post_layout_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH: return R.drawable.ic_search_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_GO_TO_SUBREDDIT: return R.drawable.ic_subreddit_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_GO_TO_USER: return R.drawable.ic_user_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_HIDE_READ_POSTS: return R.drawable.ic_hide_read_posts_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_FILTER_POSTS: return R.drawable.ic_filter_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_UPVOTED: return R.drawable.ic_arrow_upward_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_DOWNVOTED: return R.drawable.ic_arrow_downward_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_HIDDEN: return R.drawable.ic_lock_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SAVED: return R.drawable.ic_bookmarks_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SHOW_THUMBNAIL_ON_THE_LEFT: return R.drawable.ic_thumbnail_left_day_night_24dp;
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_GO_TO_TOP:
+            default: return R.drawable.ic_keyboard_double_arrow_up_day_night_24dp;
+        }
+    }
+
+    private void bottomAppBarOptionAction(int option) {
+        switch (option) {
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS: {
+                Intent intent = new Intent(this, SubscribedThingListingActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_MULTIREDDITS: {
+                Intent intent = new Intent(this, SubscribedThingListingActivity.class);
+                intent.putExtra(SubscribedThingListingActivity.EXTRA_SHOW_MULTIREDDITS, true);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REELS: {
+                // Already in Reels
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_INBOX: {
+                Intent intent = new Intent(this, InboxActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_PROFILE: {
+                Intent intent = new Intent(this, ViewUserDetailActivity.class);
+                intent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, accountName);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH: {
+                fetchPosts();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH: {
+                Intent intent = new Intent(this, SearchActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_UPVOTED: {
+                Intent intent = new Intent(this, AccountPostsActivity.class);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_UPVOTED);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_DOWNVOTED: {
+                Intent intent = new Intent(this, AccountPostsActivity.class);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_DOWNVOTED);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_HIDDEN: {
+                Intent intent = new Intent(this, AccountPostsActivity.class);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_HIDDEN);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SAVED: {
+                Intent intent = new Intent(ReelsActivity.this, AccountSavedThingActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            }
+            case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SHOW_THUMBNAIL_ON_THE_LEFT: {
+                boolean newValue = !mSharedPreferences.getBoolean(SharedPreferencesUtils.SHOW_THUMBNAIL_ON_THE_LEFT_IN_COMPACT_LAYOUT, false);
+                mSharedPreferences.edit().putBoolean(SharedPreferencesUtils.SHOW_THUMBNAIL_ON_THE_LEFT_IN_COMPACT_LAYOUT, newValue).apply();
+                EventBus.getDefault().post(new ShowThumbnailOnTheLeftInCompactLayoutEvent(newValue));
+                break;
+            }
+            default: {
+                finish();
+                break;
+            }
+        }
+    }
+
 }

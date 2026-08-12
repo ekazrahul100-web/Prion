@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="?attr/backgroundColor">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager_reels"
@@ -13,7 +13,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_app_bar_included" />
 
     <ProgressBar
         android:id="@+id/reels_progress_bar"
@@ -58,14 +59,14 @@
                 android:text="SFW"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="?attr/primaryTextColor" />
 
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="?android:attr/textColorPrimary" />
+                app:tint="?attr/primaryTextColor" />
         </LinearLayout>
 
         <!-- Category selector container (visible when in NSFW mode) -->
@@ -98,14 +99,14 @@
                 android:textSize="13sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="?attr/primaryTextColor" />
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="4dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="?android:attr/textColorPrimary" />
+                app:tint="?attr/primaryTextColor" />
         </LinearLayout>
 
         <!-- Sort type chip (e.g. "Hot ▾") -->
@@ -130,14 +131,14 @@
                 android:layout_height="wrap_content"
                 android:text="Hot"
                 android:textSize="14sp"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="?attr/primaryTextColor" />
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="?android:attr/textColorPrimary" />
+                app:tint="?attr/primaryTextColor" />
         </LinearLayout>
 
         <!-- Right: refresh + settings -->
@@ -157,7 +158,7 @@
                 android:layout_height="32dp"
                 android:padding="4dp"
                 android:src="@drawable/ic_refresh_day_night_24dp"
-                app:tint="?android:attr/textColorPrimary"
+                app:tint="?attr/primaryTextColor"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
@@ -167,13 +168,22 @@
                 android:padding="4dp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_settings_day_night_24dp"
-                app:tint="?android:attr/textColorPrimary"
+                app:tint="?attr/primaryTextColor"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Reels Settings" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+    <include
+        android:id="@+id/bottom_app_bar_included"
+        layout="@layout/bottom_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
