@@ -1006,7 +1006,7 @@ public class ReelsActivity extends BaseActivity {
                 break;
             }
             case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH: {
-                fetchPosts();
+                fetchVideos();
                 break;
             }
             case SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH: {
