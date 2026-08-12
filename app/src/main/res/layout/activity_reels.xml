@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="?android:attr/colorBackground">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager_reels"
@@ -58,14 +58,14 @@
                 android:text="SFW"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/white" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
+                app:tint="?android:attr/textColorPrimary" />
         </LinearLayout>
 
         <!-- Category selector container (visible when in NSFW mode) -->
@@ -98,14 +98,14 @@
                 android:textSize="13sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:textColor="@android:color/white" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="4dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
+                app:tint="?android:attr/textColorPrimary" />
         </LinearLayout>
 
         <!-- Sort type chip (e.g. "Hot ▾") -->
@@ -130,14 +130,14 @@
                 android:layout_height="wrap_content"
                 android:text="Hot"
                 android:textSize="14sp"
-                android:textColor="@android:color/white" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_baseline_arrow_drop_down_24dp"
-                app:tint="@android:color/white" />
+                app:tint="?android:attr/textColorPrimary" />
         </LinearLayout>
 
         <!-- Right: refresh + settings -->
@@ -157,7 +157,7 @@
                 android:layout_height="32dp"
                 android:padding="4dp"
                 android:src="@drawable/ic_refresh_day_night_24dp"
-                app:tint="@android:color/white"
+                app:tint="?android:attr/textColorPrimary"
                 android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
@@ -167,7 +167,7 @@
                 android:padding="4dp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_settings_day_night_24dp"
-                app:tint="@android:color/white"
+                app:tint="?android:attr/textColorPrimary"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Reels Settings" />
         </LinearLayout>
