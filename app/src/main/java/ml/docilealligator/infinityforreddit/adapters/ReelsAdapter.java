@@ -267,7 +267,6 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 p.release();
             }
         }
-    }
 
         // Create or update players for [position-1, position, position+1]
         for (int i = position - 1; i <= position + 1; i++) {
