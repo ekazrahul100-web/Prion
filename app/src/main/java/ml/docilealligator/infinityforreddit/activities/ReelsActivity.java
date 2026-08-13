@@ -290,20 +290,7 @@ public class ReelsActivity extends BaseActivity {
         categorySelectorContainer = findViewById(R.id.category_selector_container);
         categoryTextView          = findViewById(R.id.category_text_view);
 
-        View topOverlay = findViewById(R.id.top_overlay_container);
-        if (topOverlay != null) {
-            int statusBarHeight = 0;
-            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-            } else {
-                statusBarHeight = (int) (32 * getResources().getDisplayMetrics().density);
-            }
-            // Just use the exact status bar height plus a tiny 6dp margin so it's not totally flush,
-            // but doesn't float disconnected like before.
-            int topPadding = statusBarHeight + (int) (6 * getResources().getDisplayMetrics().density);
-            topOverlay.setPadding(topOverlay.getPaddingLeft(), topPadding, topOverlay.getPaddingRight(), topOverlay.getPaddingBottom());
-        }
+        updateTopOverlayPadding(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 
         categorySelectorContainer.setOnClickListener(v -> showCategoryPopup());
 
@@ -516,10 +503,31 @@ public class ReelsActivity extends BaseActivity {
         }, 350);
     }
 
+    private void updateTopOverlayPadding(boolean isLandscape) {
+        View topOverlay = findViewById(R.id.top_overlay_container);
+        if (topOverlay != null) {
+            int topPadding;
+            if (isLandscape) {
+                topPadding = (int) (4 * getResources().getDisplayMetrics().density);
+            } else {
+                int statusBarHeight = 0;
+                int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                if (resourceId > 0) {
+                    statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+                } else {
+                    statusBarHeight = (int) (32 * getResources().getDisplayMetrics().density);
+                }
+                topPadding = statusBarHeight + (int) (6 * getResources().getDisplayMetrics().density);
+            }
+            topOverlay.setPadding(topOverlay.getPaddingLeft(), topPadding, topOverlay.getPaddingRight(), topOverlay.getPaddingBottom());
+        }
+    }
+
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         boolean isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        updateTopOverlayPadding(isLandscape);
         View navCard = findViewById(R.id.reels_bottom_nav_card);
         if (navCard != null) {
             navCard.setVisibility((isLandscape || !showBottomAppBar) ? View.GONE : View.VISIBLE);
