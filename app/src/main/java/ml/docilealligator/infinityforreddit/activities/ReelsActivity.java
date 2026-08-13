@@ -16,6 +16,7 @@ import ml.docilealligator.infinityforreddit.events.ShowThumbnailOnTheLeftInCompa
 import org.greenrobot.eventbus.EventBus;
 import ml.docilealligator.infinityforreddit.post.PostPagingSource;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
