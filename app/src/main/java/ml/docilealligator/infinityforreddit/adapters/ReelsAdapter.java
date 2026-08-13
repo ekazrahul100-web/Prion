@@ -198,6 +198,35 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
         boolean showSeekbar = sp.getBoolean(ReelsSettingsActivity.PREF_SHOW_SEEKBAR, true);
         holder.seekBar.setVisibility(showSeekbar ? View.VISIBLE : View.GONE);
+
+        boolean isLandscape = context.getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE;
+        boolean isNavVisible = showBottomNav && !isLandscape;
+        int navOffsetPx = isNavVisible ? (int) (64 * context.getResources().getDisplayMetrics().density) : 0;
+
+        if (holder.seekBar != null && holder.seekBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) holder.seekBar.getLayoutParams();
+            int targetMargin = (int) (4 * context.getResources().getDisplayMetrics().density) + navOffsetPx;
+            if (p.bottomMargin != targetMargin) {
+                p.bottomMargin = targetMargin;
+                holder.seekBar.setLayoutParams(p);
+            }
+        }
+        if (holder.infoContainer != null && holder.infoContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) holder.infoContainer.getLayoutParams();
+            int targetMargin = (int) (32 * context.getResources().getDisplayMetrics().density) + navOffsetPx;
+            if (p.bottomMargin != targetMargin) {
+                p.bottomMargin = targetMargin;
+                holder.infoContainer.setLayoutParams(p);
+            }
+        }
+        if (holder.actionsContainer != null && holder.actionsContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) holder.actionsContainer.getLayoutParams();
+            int targetMargin = (int) (32 * context.getResources().getDisplayMetrics().density) + navOffsetPx;
+            if (p.bottomMargin != targetMargin) {
+                p.bottomMargin = targetMargin;
+                holder.actionsContainer.setLayoutParams(p);
+            }
+        }
     }
 
     public static void applyQualityToPlayer(@Nullable ExoPlayer player, boolean preferHd) {

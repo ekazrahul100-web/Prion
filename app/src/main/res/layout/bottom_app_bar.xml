@@ -48,7 +48,7 @@
             android:paddingBottom="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@null"
-            android:visibility="gone" />
+            android:visibility="invisible" />
 
         <ImageView
             android:id="@+id/option_3_bottom_app_bar"

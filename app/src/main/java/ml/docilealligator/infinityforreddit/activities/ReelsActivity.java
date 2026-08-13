@@ -393,6 +393,13 @@ public class ReelsActivity extends BaseActivity {
                 findViewById(R.id.fab_main_activity), findViewById(R.id.navigation_rail), mCustomThemeWrapper, showBottomAppBar);
 
         if (showBottomAppBar) {
+            View navCard = findViewById(R.id.reels_bottom_nav_card);
+            if (navCard != null) navCard.setVisibility(View.VISIBLE);
+
+            if (navigationWrapper.bottomAppBar != null) {
+                navigationWrapper.bottomAppBar.setBackgroundTint(android.content.res.ColorStateList.valueOf(android.graphics.Color.BLACK));
+            }
+
             sfwAdapter.setShowBottomNav(true);
             nsfwAdapter.setShowBottomNav(true);
             subscribedAdapter.setShowBottomNav(true);
@@ -513,6 +520,13 @@ public class ReelsActivity extends BaseActivity {
      * Rotates the screen instantly (no animation) to the given orientation.
      */
     private void rotateToOrientation(boolean landscape) {
+        View navCard = findViewById(R.id.reels_bottom_nav_card);
+        if (navCard != null) {
+            navCard.setVisibility((landscape || !showBottomAppBar) ? View.GONE : View.VISIBLE);
+        } else if (navigationWrapper != null && navigationWrapper.bottomAppBar != null) {
+            navigationWrapper.bottomAppBar.setVisibility((landscape || !showBottomAppBar) ? View.GONE : View.VISIBLE);
+        }
+
         int target = landscape
                 ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;

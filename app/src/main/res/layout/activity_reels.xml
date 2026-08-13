@@ -181,14 +181,28 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-    <include
-        android:id="@+id/bottom_app_bar_bottom_app_bar"
-        layout="@layout/bottom_app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/reels_bottom_nav_card"
+        android:layout_width="320dp"
+        android:layout_height="52dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@android:color/black"
+        app:cardCornerRadius="26dp"
+        app:cardElevation="8dp"
+        app:strokeColor="#333333"
+        app:strokeWidth="1dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <include
+            android:id="@+id/bottom_app_bar_bottom_app_bar"
+            layout="@layout/bottom_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
