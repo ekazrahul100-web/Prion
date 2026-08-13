@@ -39,6 +39,8 @@ public class ReelsSettingsActivity extends BaseActivity {
     public static final String PREF_LANDSCAPE_MODE   = "reels_landscape_mode";
     public static final String PREF_AUTO_ADVANCE      = "reels_auto_advance";
     public static final String PREF_QUALITY_HD        = "reels_quality_hd";
+    public static final String PREF_SHOW_SEEKBAR      = "reels_show_seekbar";
+    public static final String PREF_SPEED_UP_MULTIPLIER = "reels_speed_up_multiplier";
     public static final String PREF_HIDE_SEEN_REELS   = "hide_seen_posts_in_reels";
 
     public static final int LANDSCAPE_DEFAULT    = 0;
@@ -95,6 +97,37 @@ public class ReelsSettingsActivity extends BaseActivity {
         autoAdvanceSwitch.setChecked(mSharedPreferences.getBoolean(PREF_AUTO_ADVANCE, false));
         autoAdvanceSwitch.setOnCheckedChangeListener((btn, checked) ->
                 mSharedPreferences.edit().putBoolean(PREF_AUTO_ADVANCE, checked).apply());
+
+        // ── Show Seekbar ──────────────────────────────────────────────────
+        SwitchCompat showSeekbarSwitch = findViewById(R.id.show_seekbar_switch);
+        showSeekbarSwitch.setChecked(mSharedPreferences.getBoolean(PREF_SHOW_SEEKBAR, true));
+        showSeekbarSwitch.setOnCheckedChangeListener((btn, checked) ->
+                mSharedPreferences.edit().putBoolean(PREF_SHOW_SEEKBAR, checked).apply());
+
+        // ── Speed Up Multiplier ───────────────────────────────────────────
+        LinearLayout speedUpContainer = findViewById(R.id.speed_up_container);
+        android.widget.TextView speedUpTextView = findViewById(R.id.speed_up_text_view);
+        String currentSpeed = mSharedPreferences.getString(PREF_SPEED_UP_MULTIPLIER, "2.0");
+        speedUpTextView.setText(currentSpeed + "x");
+        speedUpContainer.setOnClickListener(v -> {
+            String[] options = {"1.25", "1.5", "1.75", "2.0"};
+            int checkedItem = -1;
+            for (int i = 0; i < options.length; i++) {
+                if (options[i].equals(mSharedPreferences.getString(PREF_SPEED_UP_MULTIPLIER, "2.0"))) {
+                    checkedItem = i;
+                    break;
+                }
+            }
+            new MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialogTheme)
+                    .setTitle("Select Speed Multiplier")
+                    .setSingleChoiceItems(new String[]{"1.25x", "1.5x", "1.75x", "2.0x"}, checkedItem, (dialog, which) -> {
+                        String newSpeed = options[which];
+                        mSharedPreferences.edit().putString(PREF_SPEED_UP_MULTIPLIER, newSpeed).apply();
+                        speedUpTextView.setText(newSpeed + "x");
+                        dialog.dismiss();
+                    })
+                    .show();
+        });
 
         // ── HD quality ────────────────────────────────────────────────────
         SwitchCompat hdSwitch = findViewById(R.id.hd_quality_switch);

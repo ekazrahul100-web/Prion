@@ -9,6 +9,7 @@ import ml.docilealligator.infinityforreddit.activities.InboxActivity;
 import ml.docilealligator.infinityforreddit.activities.SearchActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity;
 import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
+import ml.docilealligator.infinityforreddit.activities.ViewSubredditDetailActivity;
 import ml.docilealligator.infinityforreddit.activities.AccountPostsActivity;
 import ml.docilealligator.infinityforreddit.activities.AccountSavedThingActivity;
 import ml.docilealligator.infinityforreddit.events.ShowThumbnailOnTheLeftInCompactLayoutEvent;
@@ -212,9 +213,51 @@ public class ReelsActivity extends BaseActivity {
     private final LinkedHashSet<String> categoryCooldownSet = new LinkedHashSet<>();
     @Nullable private String activeCategoryKey = null;
 
+    private NavigationWrapper navigationWrapper;
+    private boolean showBottomAppBar;
+
     // ─────────────────────────────────────────────────────────────────────
     // onCreate
     // ─────────────────────────────────────────────────────────────────────
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("currentMode", currentMode);
+        outState.putInt("sfwPosition", sfwPosition);
+        outState.putInt("nsfwPosition", nsfwPosition);
+        outState.putInt("subscribedPosition", subscribedPosition);
+        outState.putString("sfwAfter", sfwAfter);
+        outState.putString("nsfwAfter", nsfwAfter);
+        outState.putString("subscribedAfter", subscribedAfter);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        currentMode = savedInstanceState.getInt("currentMode", MODE_SFW);
+        sfwPosition = savedInstanceState.getInt("sfwPosition", 0);
+        nsfwPosition = savedInstanceState.getInt("nsfwPosition", 0);
+        subscribedPosition = savedInstanceState.getInt("subscribedPosition", 0);
+        sfwAfter = savedInstanceState.getString("sfwAfter");
+        nsfwAfter = savedInstanceState.getString("nsfwAfter");
+        subscribedAfter = savedInstanceState.getString("subscribedAfter");
+        
+        updateModeUI();
+        ReelsAdapter currentAdapter = getCurrentAdapter();
+        if (currentAdapter != null) {
+            viewPager.setAdapter(currentAdapter);
+            int pos = getCurrentPosition();
+            if (pos >= 0 && pos < currentAdapter.getItemCount()) {
+                viewPager.setCurrentItem(pos, false);
+            }
+        }
+        
+        // If the activity was killed, the adapter will be empty. Fetch videos again.
+        if (currentAdapter != null && currentAdapter.getItemCount() == 0) {
+            fetchVideos();
+        }
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -328,6 +371,30 @@ public class ReelsActivity extends BaseActivity {
                 dwellHandler.postDelayed(dwellRunnable, DWELL_TIME_MS);
             }
         });
+
+        // Initialize bottom app bar
+        showBottomAppBar = mSharedPreferences.getBoolean(SharedPreferencesUtils.BOTTOM_APP_BAR_KEY, false);
+        navigationWrapper = new NavigationWrapper(findViewById(R.id.bottom_app_bar_bottom_app_bar), findViewById(R.id.linear_layout_bottom_app_bar),
+                findViewById(R.id.option_1_bottom_app_bar), findViewById(R.id.option_2_bottom_app_bar),
+                findViewById(R.id.option_3_bottom_app_bar), findViewById(R.id.option_4_bottom_app_bar),
+                null, null, mCustomThemeWrapper, showBottomAppBar);
+
+        if (showBottomAppBar) {
+            String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "");
+            int option1 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
+            int option2 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_2, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_MULTIREDDITS);
+            int option3 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_3, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_INBOX);
+            int option4 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_4, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_CHANGE_SORT_TYPE : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_PROFILE);
+
+            navigationWrapper.bindOptionDrawableResource(getBottomAppBarOptionDrawableResource(option1),
+                    getBottomAppBarOptionDrawableResource(option2), getBottomAppBarOptionDrawableResource(option3),
+                    getBottomAppBarOptionDrawableResource(option4));
+            
+            navigationWrapper.option1BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option1));
+            navigationWrapper.option2BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option2));
+            navigationWrapper.option3BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option3));
+            navigationWrapper.option4BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option4));
+        }
 
         fetchVideos();
     }
@@ -447,7 +514,8 @@ public class ReelsActivity extends BaseActivity {
     // ─────────────────────────────────────────────────────────────────────
 
     private void showModePopup() {
-        PopupMenu popup = new PopupMenu(this, modeSelectorContainer);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        PopupMenu popup = new PopupMenu(wrapper, modeSelectorContainer);
         popup.getMenu().add(0, MODE_SFW,        0, "SFW");
         popup.getMenu().add(0, MODE_SUBSCRIBED, 1, "Subscribed");
         popup.getMenu().add(0, MODE_NSFW,       2, "NSFW");
@@ -480,7 +548,8 @@ public class ReelsActivity extends BaseActivity {
     // ─────────────────────────────────────────────────────────────────────
 
     private void showSortPopup() {
-        PopupMenu popup = new PopupMenu(this, sortSelectorContainer);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        PopupMenu popup = new PopupMenu(wrapper, sortSelectorContainer);
         popup.getMenu().add(0, 0, 0, "Hot");
         popup.getMenu().add(0, 1, 1, "New");
         popup.getMenu().add(0, 2, 2, "Rising");
@@ -500,7 +569,8 @@ public class ReelsActivity extends BaseActivity {
     }
 
     private void showTimePopup(SortType.Type sortType) {
-        PopupMenu popup = new PopupMenu(this, sortSelectorContainer);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        PopupMenu popup = new PopupMenu(wrapper, sortSelectorContainer);
         popup.getMenu().add(0, 0, 0, "Past hour");
         popup.getMenu().add(0, 1, 1, "Past 24 hours");
         popup.getMenu().add(0, 2, 2, "Past week");
@@ -913,6 +983,20 @@ public class ReelsActivity extends BaseActivity {
         super.onConfigurationChanged(newConfig);
         // Activity handles config changes itself — no restart needed.
         // This is intentionally a no-op; the activity continues normally.
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ReelsAdapter current = getCurrentAdapter();
+        if (current != null) current.pauseCurrentPlayer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ReelsAdapter current = getCurrentAdapter();
+        if (current != null) current.resumeCurrentPlayer();
     }
 
     @Override

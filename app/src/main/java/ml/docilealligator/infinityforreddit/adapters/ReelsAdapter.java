@@ -53,6 +53,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         void onShare(Post post);
         /** Called when the user taps "View post" or swipes left. */
         void onOpenPost(Post post);
+        void onSubredditClick(String subredditName);
     }
 
     private static final int COLOR_UPVOTED   = 0xFFFF8B60;
@@ -186,6 +187,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         if (holder.qualityButton != null) {
             holder.qualityButton.setText(isHd ? "HD" : "SD");
         }
+
+        boolean showSeekbar = sp.getBoolean(ReelsSettingsActivity.PREF_SHOW_SEEKBAR, true);
+        holder.seekBar.setVisibility(showSeekbar ? View.VISIBLE : View.GONE);
     }
 
     public static void applyQualityToPlayer(@Nullable ExoPlayer player, boolean preferHd) {
@@ -263,8 +267,27 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 p.release();
             }
         }
+    }
 
-        // Create or update players for [position-1, position, position+1]
+    public void pauseCurrentPlayer() {
+        if (currentPlayingPosition != -1) {
+            ExoPlayer p = players.get(currentPlayingPosition);
+            if (p != null && p.isPlaying()) {
+                p.pause();
+            }
+        }
+    }
+
+    public void resumeCurrentPlayer() {
+        if (currentPlayingPosition != -1) {
+            ExoPlayer p = players.get(currentPlayingPosition);
+            if (p != null && !p.isPlaying() && p.getPlaybackState() != Player.STATE_ENDED) {
+                p.play();
+            }
+        }
+    }
+
+    // Create or update players for [position-1, position, position+1]
         for (int i = position - 1; i <= position + 1; i++) {
             if (i >= 0 && i < posts.size()) {
                 if (!players.containsKey(i)) {
@@ -331,6 +354,9 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     ExoPlayer p = players.get(i);
                     if (p != null) {
                         p.setVolume(isMuted ? 0f : 1f);
+                        if (i == position && p.getPlaybackState() == Player.STATE_ENDED) {
+                            p.seekTo(0);
+                        }
                         p.setPlayWhenReady(i == position);
                     }
                 }
@@ -429,6 +455,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             muteButton     = itemView.findViewById(R.id.mute_button);
             openPostHint   = itemView.findViewById(R.id.open_post_hint);
             seekBar        = itemView.findViewById(R.id.seek_bar);
+
+            subredditText.setOnClickListener(v -> {
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos < posts.size()) {
+                    listener.onSubredditClick(posts.get(pos).getSubredditName());
+                }
+            });
 
             // ── Quality toggle ────────────────────────────────
             if (qualityButton != null) {
@@ -592,9 +625,47 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
 
             playerView.setOnTouchListener((v, event) -> {
                 gestureDetector.onTouchEvent(event);
+                
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    uiHandler.postDelayed(speedUpRunnable, 500);
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    uiHandler.removeCallbacks(speedUpRunnable);
+                    if (isSpedUp) {
+                        isSpedUp = false;
+                        int pos = getBindingAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            ExoPlayer player = players.get(pos);
+                            if (player != null) {
+                                player.setPlaybackParameters(new androidx.media3.common.PlaybackParameters(1f));
+                            }
+                        }
+                    }
+                }
                 return true;
             });
         }
+        
+        private boolean isSpedUp = false;
+        private final Runnable speedUpRunnable = new Runnable() {
+            @Override
+            public void run() {
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && pos == currentPlayingPosition) {
+                    ExoPlayer player = players.get(pos);
+                    if (player != null && player.isPlaying()) {
+                        isSpedUp = true;
+                        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+                        String speedStr = sp.getString(ReelsSettingsActivity.PREF_SPEED_UP_MULTIPLIER, "2.0");
+                        float speed = 2.0f;
+                        try {
+                            speed = Float.parseFloat(speedStr);
+                        } catch (Exception ignored) {}
+                        player.setPlaybackParameters(new androidx.media3.common.PlaybackParameters(speed));
+                    }
+                }
+            }
+        };
 
         private void openCurrentPost() {
             int pos = getBindingAdapterPosition();
