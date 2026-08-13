@@ -269,25 +269,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         }
     }
 
-    public void pauseCurrentPlayer() {
-        if (currentPlayingPosition != -1) {
-            ExoPlayer p = players.get(currentPlayingPosition);
-            if (p != null && p.isPlaying()) {
-                p.pause();
-            }
-        }
-    }
-
-    public void resumeCurrentPlayer() {
-        if (currentPlayingPosition != -1) {
-            ExoPlayer p = players.get(currentPlayingPosition);
-            if (p != null && !p.isPlaying() && p.getPlaybackState() != Player.STATE_ENDED) {
-                p.play();
-            }
-        }
-    }
-
-    // Create or update players for [position-1, position, position+1]
+        // Create or update players for [position-1, position, position+1]
         for (int i = position - 1; i <= position + 1; i++) {
             if (i >= 0 && i < posts.size()) {
                 if (!players.containsKey(i)) {
@@ -360,6 +342,24 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                         p.setPlayWhenReady(i == position);
                     }
                 }
+            }
+        }
+    }
+
+    public void pauseCurrentPlayer() {
+        if (currentPlayingPosition != -1) {
+            ExoPlayer p = players.get(currentPlayingPosition);
+            if (p != null && p.isPlaying()) {
+                p.pause();
+            }
+        }
+    }
+
+    public void resumeCurrentPlayer() {
+        if (currentPlayingPosition != -1) {
+            ExoPlayer p = players.get(currentPlayingPosition);
+            if (p != null && !p.isPlaying() && p.getPlaybackState() != Player.STATE_ENDED) {
+                p.play();
             }
         }
     }
