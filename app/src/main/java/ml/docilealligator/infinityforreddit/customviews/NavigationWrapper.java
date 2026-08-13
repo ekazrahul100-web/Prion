@@ -46,7 +46,7 @@ public class NavigationWrapper {
     public NavigationWrapper(BottomAppBar bottomAppBar, LinearLayout linearLayoutBottomAppBar,
                              ImageView option1BottomAppBar, ImageView option2BottomAppBar,
                              ImageView option3BottomAppBar, ImageView option4BottomAppBar,
-                             FloatingActionButton floatingActionButton, NavigationRailView navigationRailView,
+                             @Nullable FloatingActionButton floatingActionButton, @Nullable NavigationRailView navigationRailView,
                              CustomThemeWrapper customThemeWrapper,
                              boolean showBottomAppBar) {
         this.bottomAppBar = bottomAppBar;
