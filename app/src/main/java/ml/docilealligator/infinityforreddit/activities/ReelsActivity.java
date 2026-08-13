@@ -378,7 +378,7 @@ public class ReelsActivity extends BaseActivity {
         navigationWrapper = new NavigationWrapper(findViewById(R.id.bottom_app_bar_bottom_app_bar), findViewById(R.id.linear_layout_bottom_app_bar),
                 findViewById(R.id.option_1_bottom_app_bar), findViewById(R.id.option_2_bottom_app_bar),
                 findViewById(R.id.option_3_bottom_app_bar), findViewById(R.id.option_4_bottom_app_bar),
-                null, null, mCustomThemeWrapper, showBottomAppBar);
+                findViewById(R.id.fab_main_activity), findViewById(R.id.navigation_rail), mCustomThemeWrapper, showBottomAppBar);
 
         if (showBottomAppBar) {
             String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "");

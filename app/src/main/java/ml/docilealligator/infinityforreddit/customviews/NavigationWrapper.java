@@ -30,8 +30,8 @@ public class NavigationWrapper {
     public ImageView option3BottomAppBar;
     public ImageView option4BottomAppBar;
 
-    @Nullable public NavigationRailView navigationRailView;
-    @Nullable public FloatingActionButton floatingActionButton;
+    public NavigationRailView navigationRailView;
+    public FloatingActionButton floatingActionButton;
 
     private CustomThemeWrapper customThemeWrapper;
     private int option1 = -1;
@@ -46,7 +46,7 @@ public class NavigationWrapper {
     public NavigationWrapper(BottomAppBar bottomAppBar, LinearLayout linearLayoutBottomAppBar,
                              ImageView option1BottomAppBar, ImageView option2BottomAppBar,
                              ImageView option3BottomAppBar, ImageView option4BottomAppBar,
-                             @Nullable FloatingActionButton floatingActionButton, @Nullable NavigationRailView navigationRailView,
+                             FloatingActionButton floatingActionButton, NavigationRailView navigationRailView,
                              CustomThemeWrapper customThemeWrapper,
                              boolean showBottomAppBar) {
         this.bottomAppBar = bottomAppBar;
