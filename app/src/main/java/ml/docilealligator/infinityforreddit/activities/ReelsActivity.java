@@ -516,6 +516,22 @@ public class ReelsActivity extends BaseActivity {
         }, 350);
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        boolean isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        View navCard = findViewById(R.id.reels_bottom_nav_card);
+        if (navCard != null) {
+            navCard.setVisibility((isLandscape || !showBottomAppBar) ? View.GONE : View.VISIBLE);
+        } else if (navigationWrapper != null && navigationWrapper.bottomAppBar != null) {
+            navigationWrapper.bottomAppBar.setVisibility((isLandscape || !showBottomAppBar) ? View.GONE : View.VISIBLE);
+        }
+        ReelsAdapter currentAdapter = getCurrentAdapter();
+        if (currentAdapter != null) {
+            currentAdapter.notifyDataSetChanged();
+        }
+    }
+
     /**
      * Rotates the screen instantly (no animation) to the given orientation.
      */
@@ -541,6 +557,12 @@ public class ReelsActivity extends BaseActivity {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         overridePendingTransition(0, 0);
         setRequestedOrientation(target);
+
+        ReelsAdapter currentAdapter = getCurrentAdapter();
+        if (currentAdapter != null) {
+            currentAdapter.notifyDataSetChanged();
+        }
+
         new Handler(Looper.getMainLooper()).postDelayed(() ->
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE), 400);
     }

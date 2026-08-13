@@ -221,10 +221,25 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         }
         if (holder.actionsContainer != null && holder.actionsContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
             ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) holder.actionsContainer.getLayoutParams();
-            int targetMargin = (int) (32 * context.getResources().getDisplayMetrics().density) + navOffsetPx;
+            int targetMargin = (int) ((isLandscape ? 8 : 32) * context.getResources().getDisplayMetrics().density) + navOffsetPx;
             if (p.bottomMargin != targetMargin) {
                 p.bottomMargin = targetMargin;
                 holder.actionsContainer.setLayoutParams(p);
+            }
+
+            int actionChildMarginPx = (int) ((isLandscape ? 4 : 16) * context.getResources().getDisplayMetrics().density);
+            View[] actionViewsWithMargin = new View[]{
+                holder.scoreText, holder.downvoteButton, holder.commentsButton,
+                holder.saveButton, holder.shareButton, holder.qualityButton
+            };
+            for (View v : actionViewsWithMargin) {
+                if (v != null && v.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams mp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                    if (mp.bottomMargin != actionChildMarginPx) {
+                        mp.bottomMargin = actionChildMarginPx;
+                        v.setLayoutParams(mp);
+                    }
+                }
             }
         }
     }

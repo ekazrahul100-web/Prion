@@ -67,6 +67,14 @@ public class ReelsSettingsActivity extends BaseActivity {
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
+        if (isImmersiveInterfaceRespectForcedEdgeToEdge()) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+                androidx.core.graphics.Insets allInsets = ml.docilealligator.infinityforreddit.utils.Utils.getInsets(insets, false, isForcedImmersiveInterface());
+                setMargins(toolbar, allInsets.left, allInsets.top, allInsets.right, BaseActivity.IGNORE_MARGIN);
+                return insets;
+            });
+        }
+
         // ── Landscape mode radio buttons ──────────────────────────────────
         LinearLayout defaultContainer     = findViewById(R.id.landscape_mode_default_container);
         LinearLayout autoRotateContainer  = findViewById(R.id.landscape_mode_autorotate_container);
