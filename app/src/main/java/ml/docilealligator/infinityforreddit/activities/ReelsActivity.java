@@ -266,6 +266,18 @@ public class ReelsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reels);
 
+        // Force status and navigation bars to black since Reels is inherently a dark mode experience
+        getWindow().setStatusBarColor(android.graphics.Color.BLACK);
+        getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
+        
+        // Ensure status bar icons are light (since background is now black)
+        androidx.core.view.WindowInsetsControllerCompat windowInsetsController =
+                androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (windowInsetsController != null) {
+            windowInsetsController.setAppearanceLightStatusBars(false);
+            windowInsetsController.setAppearanceLightNavigationBars(false);
+        }
+
         // Bind views
         viewPager               = findViewById(R.id.view_pager_reels);
         progressBar             = findViewById(R.id.reels_progress_bar);
