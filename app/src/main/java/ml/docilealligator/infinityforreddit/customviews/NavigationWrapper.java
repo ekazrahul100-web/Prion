@@ -30,8 +30,8 @@ public class NavigationWrapper {
     public ImageView option3BottomAppBar;
     public ImageView option4BottomAppBar;
 
-    public NavigationRailView navigationRailView;
-    public FloatingActionButton floatingActionButton;
+    @Nullable public NavigationRailView navigationRailView;
+    @Nullable public FloatingActionButton floatingActionButton;
 
     private CustomThemeWrapper customThemeWrapper;
     private int option1 = -1;
