@@ -381,10 +381,10 @@ public class ReelsActivity extends BaseActivity {
 
         if (showBottomAppBar) {
             String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "");
-            int option1 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
-            int option2 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_2, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_MULTIREDDITS);
-            int option3 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_3, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_INBOX);
-            int option4 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_4, accountName.equals(ml.docilealligator.infinityforreddit.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_CHANGE_SORT_TYPE : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_PROFILE);
+            int option1 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
+            int option2 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_2, accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SEARCH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_MULTIREDDITS);
+            int option3 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_3, accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_REFRESH : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_INBOX);
+            int option4 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_4, accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_CHANGE_SORT_TYPE : SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_PROFILE);
 
             navigationWrapper.bindOptionDrawableResource(getBottomAppBarOptionDrawableResource(option1),
                     getBottomAppBarOptionDrawableResource(option2), getBottomAppBarOptionDrawableResource(option3),
@@ -419,8 +419,11 @@ public class ReelsActivity extends BaseActivity {
         // Re-apply landscape mode to the currently visible video
         ReelsAdapter currentAdapter = getCurrentAdapter();
         int pos = getCurrentPosition();
-        if (currentAdapter.getItemCount() > 0) {
-            detectAndApplyLandscapeMode(currentAdapter, pos);
+        if (currentAdapter != null) {
+            if (currentAdapter.getItemCount() > 0) {
+                detectAndApplyLandscapeMode(currentAdapter, pos);
+            }
+            currentAdapter.resumeCurrentPlayer();
         }
     }
 
@@ -751,6 +754,14 @@ public class ReelsActivity extends BaseActivity {
                 SeenPostsManager.markSeen(mSharedPreferences, post.getId(), REELS_NAMESPACE);
                 openPostDetail(post);
             }
+
+            @Override
+            public void onSubredditClick(String subredditName) {
+                Intent intent = new Intent(ReelsActivity.this, RedditDataActivity.class);
+                intent.putExtra(RedditDataActivity.EXTRA_NAME, subredditName);
+                intent.putExtra(RedditDataActivity.EXTRA_DATA_TYPE, RedditDataActivity.EXTRA_DATA_TYPE_SUBREDDIT);
+                startActivity(intent);
+            }
         };
     }
 
@@ -990,13 +1001,6 @@ public class ReelsActivity extends BaseActivity {
         super.onPause();
         ReelsAdapter current = getCurrentAdapter();
         if (current != null) current.pauseCurrentPlayer();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ReelsAdapter current = getCurrentAdapter();
-        if (current != null) current.resumeCurrentPlayer();
     }
 
     @Override
