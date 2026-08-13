@@ -69,6 +69,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     private final Context context;
     private final InteractionListener listener;
     private final List<Post> posts = new ArrayList<>();
+    private boolean showBottomNav = false;
 
     private int currentPlayingPosition = -1;
     private final Map<Integer, ExoPlayer> players = new HashMap<>();
@@ -82,6 +83,13 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
     public ReelsAdapter(Context context, InteractionListener listener) {
         this.context = context;
         this.listener = listener;
+    }
+
+    public void setShowBottomNav(boolean show) {
+        if (this.showBottomNav != show) {
+            this.showBottomNav = show;
+            notifyDataSetChanged();
+        }
     }
 
     /**
@@ -454,6 +462,27 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
             muteButton     = itemView.findViewById(R.id.mute_button);
             openPostHint   = itemView.findViewById(R.id.open_post_hint);
             seekBar        = itemView.findViewById(R.id.seek_bar);
+            infoContainer  = itemView.findViewById(R.id.info_container);
+            actionsContainer = itemView.findViewById(R.id.actions_container);
+
+            if (showBottomNav) {
+                int navHeightPx = (int) (52 * context.getResources().getDisplayMetrics().density);
+                if (seekBar != null && seekBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams seekBarParams = (ViewGroup.MarginLayoutParams) seekBar.getLayoutParams();
+                    seekBarParams.bottomMargin = (int) (4 * context.getResources().getDisplayMetrics().density) + navHeightPx;
+                    seekBar.setLayoutParams(seekBarParams);
+                }
+                if (infoContainer != null && infoContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams infoParams = (ViewGroup.MarginLayoutParams) infoContainer.getLayoutParams();
+                    infoParams.bottomMargin = (int) (32 * context.getResources().getDisplayMetrics().density) + navHeightPx;
+                    infoContainer.setLayoutParams(infoParams);
+                }
+                if (actionsContainer != null && actionsContainer.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams actionsParams = (ViewGroup.MarginLayoutParams) actionsContainer.getLayoutParams();
+                    actionsParams.bottomMargin = (int) (32 * context.getResources().getDisplayMetrics().density) + navHeightPx;
+                    actionsContainer.setLayoutParams(actionsParams);
+                }
+            }
 
             subredditText.setOnClickListener(v -> {
                 int pos = getBindingAdapterPosition();
@@ -654,6 +683,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                     ExoPlayer player = players.get(pos);
                     if (player != null && player.isPlaying()) {
                         isSpedUp = true;
+                        itemView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS, android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
                         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
                         String speedStr = sp.getString(ReelsSettingsActivity.PREF_SPEED_UP_MULTIPLIER, "2.0");
                         float speed = 2.0f;

@@ -393,6 +393,10 @@ public class ReelsActivity extends BaseActivity {
                 findViewById(R.id.fab_main_activity), findViewById(R.id.navigation_rail), mCustomThemeWrapper, showBottomAppBar);
 
         if (showBottomAppBar) {
+            sfwAdapter.setShowBottomNav(true);
+            nsfwAdapter.setShowBottomNav(true);
+            subscribedAdapter.setShowBottomNav(true);
+
             String accountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "");
             if (accountName == null) accountName = "";
             int option1 = mSharedPreferences.getInt((accountName.equals(ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT) ? ml.docilealligator.infinityforreddit.account.Account.ANONYMOUS_ACCOUNT : "") + SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.MAIN_ACTIVITY_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
@@ -408,6 +412,19 @@ public class ReelsActivity extends BaseActivity {
             navigationWrapper.option2BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option2));
             navigationWrapper.option3BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option3));
             navigationWrapper.option4BottomAppBar.setOnClickListener(view -> bottomAppBarOptionAction(option4));
+
+            ImageView optionCenter = findViewById(R.id.option_center_bottom_app_bar);
+            if (optionCenter != null) {
+                optionCenter.setVisibility(View.VISIBLE);
+                optionCenter.setImageResource(R.drawable.ic_home_day_night_24dp);
+                optionCenter.setColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
+                optionCenter.setOnClickListener(v -> {
+                    Intent intent = new Intent(ReelsActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                });
+            }
         }
 
         fetchVideos();

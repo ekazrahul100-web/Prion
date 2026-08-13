@@ -38,11 +38,17 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@null" />
 
-        <TextView
+        <ImageView
+            android:id="@+id/option_center_bottom_app_bar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@android:color/transparent"/>
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/option_3_bottom_app_bar"
