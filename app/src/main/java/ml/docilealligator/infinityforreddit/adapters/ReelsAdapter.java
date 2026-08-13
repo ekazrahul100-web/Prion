@@ -227,7 +227,7 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
                 holder.actionsContainer.setLayoutParams(p);
             }
 
-            int actionChildMarginPx = (int) ((isLandscape ? 4 : 16) * context.getResources().getDisplayMetrics().density);
+            int actionChildMarginPx = (int) ((isLandscape ? 6 : 16) * context.getResources().getDisplayMetrics().density);
             View[] actionViewsWithMargin = new View[]{
                 holder.scoreText, holder.downvoteButton, holder.commentsButton,
                 holder.saveButton, holder.shareButton, holder.qualityButton

@@ -508,7 +508,7 @@ public class ReelsActivity extends BaseActivity {
         if (topOverlay != null) {
             int topPadding;
             if (isLandscape) {
-                topPadding = (int) (4 * getResources().getDisplayMetrics().density);
+                topPadding = (int) (24 * getResources().getDisplayMetrics().density);
             } else {
                 int statusBarHeight = 0;
                 int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
