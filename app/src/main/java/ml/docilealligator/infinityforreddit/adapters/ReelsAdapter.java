@@ -414,6 +414,8 @@ public class ReelsAdapter extends RecyclerView.Adapter<ReelsAdapter.ReelViewHold
         ImageView muteButton;
         LinearLayout openPostHint;
         SeekBar seekBar;
+        View infoContainer;
+        View actionsContainer;
 
 
         private GestureDetector gestureDetector;
