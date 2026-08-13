@@ -517,7 +517,7 @@ public class ReelsActivity extends BaseActivity {
     // ─────────────────────────────────────────────────────────────────────
 
     private void showModePopup() {
-        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, androidx.appcompat.R.style.ThemeOverlay_AppCompat_Dark);
         PopupMenu popup = new PopupMenu(wrapper, modeSelectorContainer);
         popup.getMenu().add(0, MODE_SFW,        0, "SFW");
         popup.getMenu().add(0, MODE_SUBSCRIBED, 1, "Subscribed");
@@ -551,7 +551,7 @@ public class ReelsActivity extends BaseActivity {
     // ─────────────────────────────────────────────────────────────────────
 
     private void showSortPopup() {
-        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, androidx.appcompat.R.style.ThemeOverlay_AppCompat_Dark);
         PopupMenu popup = new PopupMenu(wrapper, sortSelectorContainer);
         popup.getMenu().add(0, 0, 0, "Hot");
         popup.getMenu().add(0, 1, 1, "New");
@@ -572,7 +572,7 @@ public class ReelsActivity extends BaseActivity {
     }
 
     private void showTimePopup(SortType.Type sortType) {
-        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_Normal_NormalDark);
+        Context wrapper = new androidx.appcompat.view.ContextThemeWrapper(this, androidx.appcompat.R.style.ThemeOverlay_AppCompat_Dark);
         PopupMenu popup = new PopupMenu(wrapper, sortSelectorContainer);
         popup.getMenu().add(0, 0, 0, "Past hour");
         popup.getMenu().add(0, 1, 1, "Past 24 hours");
@@ -757,9 +757,8 @@ public class ReelsActivity extends BaseActivity {
 
             @Override
             public void onSubredditClick(String subredditName) {
-                Intent intent = new Intent(ReelsActivity.this, RedditDataActivity.class);
-                intent.putExtra(RedditDataActivity.EXTRA_NAME, subredditName);
-                intent.putExtra(RedditDataActivity.EXTRA_DATA_TYPE, RedditDataActivity.EXTRA_DATA_TYPE_SUBREDDIT);
+                Intent intent = new Intent(ReelsActivity.this, ViewSubredditDetailActivity.class);
+                intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY, subredditName);
                 startActivity(intent);
             }
         };
