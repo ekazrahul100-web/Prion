@@ -1055,12 +1055,7 @@ public class ReelsActivity extends BaseActivity {
     // ─────────────────────────────────────────────────────────────────────
 
 
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Activity handles config changes itself — no restart needed.
-        // This is intentionally a no-op; the activity continues normally.
-    }
+
 
     @Override
     protected void onPause() {
